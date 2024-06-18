@@ -3,6 +3,7 @@ import pathlib
 
 import attention_weights
 import models
+import numbering
 
 
 def _valid_dir_arg(value):
@@ -47,6 +48,10 @@ def _parse_args():
     parser.add_argument("-l", "--layers", required=False,
                         nargs='+', type=int,
                         help="The model layers to get weights from")
+    parser.add_argument("--scheme", required=False,
+                        choices=numbering.SCHEME_NAMES,
+                        default=numbering.SCHEME_IMGT,
+                        help="The sequence numbering scheme to use")
     return parser.parse_args()
 
 
@@ -55,6 +60,9 @@ if __name__ == '__main__':
 
     sequences = attention_weights.get_sequences(
         args.input, args.chain, args.sequence_indexes)
+
+    sequences = numbering.get_adjusted_sequence_numbering(
+        sequences, args.scheme)
 
     attentions = attention_weights.get_attention_weights(
         args.model, args.model_path, sequences, args.layers)
