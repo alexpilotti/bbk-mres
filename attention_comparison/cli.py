@@ -34,7 +34,7 @@ def _parse_args():
     parser.add_argument("-i", "--input", required=True,
                         type=_valid_file_arg,
                         help="Sequences data in Apache Parquet format path")
-    parser.add_argument("-s", "--sequence-indexes", required=True,
+    parser.add_argument("-s", "--sequence-indexes", required=False,
                         nargs='+', type=int,
                         help="Indexes of the sequences in the data file. "
                              "Accepts multiple values"),

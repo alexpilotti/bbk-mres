@@ -13,6 +13,9 @@ CHAIN_TYPES = [CHAIN_H, CHAIN_L, CHAIN_HL]
 
 def get_sequences(data_path, chain, indexes):
     data = pd.read_parquet(data_path)
+    if not indexes:
+        indexes = data.index
+
     sequences = []
     for index in indexes:
         sequence = {}
