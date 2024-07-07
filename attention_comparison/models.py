@@ -1,3 +1,5 @@
+import os
+
 import transformers
 
 
@@ -29,6 +31,7 @@ _DEFAULT_MODEL_HUB_PATHS = {
     MODEL_ANTIBERTA2: "alchemab/antiberta2",
 }
 
+
 # Note(alexpilotti): doubling the length due to the additional spaces
 _ANTIBERTA2_MAX_LENGTH = 256 * 2
 _ANTIBERTY_MAX_LENGTH = (512 - 2) * 2
@@ -42,8 +45,15 @@ class BaseModelLoader:
     def check_model_name(model_name):
         return False
 
-    def __init__(self, model_path):
-        self._model_path = model_path
+    def _set_model_path(self, model_name, model_path):
+        self._model_path = model_path or _DEFAULT_MODEL_HUB_PATHS.get(
+            model_name)
+        if not self._model_path:
+            raise Exception(
+                f"Default path not available for model: {model_name}")
+
+    def __init__(self, model_name, model_path):
+        self._set_model_path(model_name, model_path)
         self._cls_token = None
 
     def load_model(self):
@@ -96,9 +106,22 @@ class AntiBERTyModelLoader(BaseBERTModelLoader):
     def check_model_name(model_name):
         return model_name == MODEL_ANTIBERTY
 
+    def _set_model_path(self, model_name, model_path):
+        if model_path:
+            self._model_path = model_path
+            self._vocab_txt_path = os.path.join(self._model_path, "vocab.txt")
+        else:
+            import antiberty
+            antiberty_dir = os.path.dirname(
+                os.path.realpath(antiberty.__file__))
+            models_base_dir = os.path.join(antiberty_dir, "trained_models")
+            self._model_path = os.path.join(
+                models_base_dir, "AntiBERTy_md_smooth")
+            self._vocab_txt_path = os.path.join(models_base_dir, "vocab.txt")
+
     def load_model(self):
         tokenizer = transformers.BertTokenizer(
-            vocab_file=self._model_path, do_lower_case=False)
+            vocab_file=self._vocab_txt_path, do_lower_case=False)
         self._cls_token = tokenizer.cls_token
         model = transformers.AutoModelForSequenceClassification.\
             from_pretrained(self._model_path, num_labels=2)
@@ -113,12 +136,12 @@ class BALMPairedModelLoader(BaseModelLoader):
     def check_model_name(model_name):
         return model_name == MODEL_BALM_PAIRED
 
-    def __init__(self, model_path):
+    def _set_model_path(self, model_name, model_path):
         if not model_path:
             raise Exception(
                 "BALM requires a local model path, e.g. "
                 "\"BALM-paired_LC-coherence_90-5-5-split_122222\"")
-        super().__init__(model_path)
+        self._model_path = model_path
 
     def format_sequence(self, chain_h, chain_l):
         return super().format_sequence(
@@ -126,17 +149,14 @@ class BALMPairedModelLoader(BaseModelLoader):
 
 
 def load_model(model_name, model_path):
-    MODEL_LOADERS = [ESM2ModelLoader,
-                     AntiBERTa2ModelLoader,
-                     BALMPairedModelLoader]
+    MODEL_LOADERS = [AntiBERTa2ModelLoader,
+                     AntiBERTyModelLoader,
+                     BALMPairedModelLoader,
+                     ESM2ModelLoader]
 
     for model_loader_class in MODEL_LOADERS:
         if model_loader_class.check_model_name(model_name):
-            path = model_path or _DEFAULT_MODEL_HUB_PATHS.get(model_name)
-            if not path:
-                raise Exception(
-                    f"Default path not available for model: {model_name}")
-            model_loader = model_loader_class(path)
+            model_loader = model_loader_class(model_name, model_path)
             return model_loader.load_model() + (model_loader.format_sequence, )
 
     raise Exception(f"Unknown model: {model_name}")
