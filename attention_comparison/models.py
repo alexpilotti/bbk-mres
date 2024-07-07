@@ -110,6 +110,9 @@ class AntiBERTyModelLoader(BaseBERTModelLoader):
 
 
 class BALMPairedModelLoader(BaseModelLoader):
+    def check_model_name(model_name):
+        return model_name == MODEL_BALM_PAIRED
+
     def __init__(self, model_path):
         if not model_path:
             raise Exception(
@@ -123,7 +126,9 @@ class BALMPairedModelLoader(BaseModelLoader):
 
 
 def load_model(model_name, model_path):
-    MODEL_LOADERS = [ESM2ModelLoader, AntiBERTa2ModelLoader]
+    MODEL_LOADERS = [ESM2ModelLoader,
+                     AntiBERTa2ModelLoader,
+                     BALMPairedModelLoader]
 
     for model_loader_class in MODEL_LOADERS:
         if model_loader_class.check_model_name(model_name):
