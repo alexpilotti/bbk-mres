@@ -49,7 +49,9 @@ def get_attention_weights(model_name, model_path, sequences, layers):
 
     attentions = []
 
-    for sequence in sequences:
+    for sequence_index, sequence in enumerate(sequences):
+        print(f"Sequence {sequence_index} out of {len(sequences)}")
+
         chain_h, chain_h_adj = sequence.get(CHAIN_H, [None, None])
         chain_l, chain_l_adj = sequence.get(CHAIN_L, [None, None])
 
@@ -104,6 +106,9 @@ def get_attention_weights(model_name, model_path, sequences, layers):
                 df.rename(inplace=True, columns={
                     'adj_index': 'Seq_1', 'level_1': 'Seq_2', 0: "Weight"})
 
+                # Convert from float32 to float64
+                # df['Weight'] = df['Weight'].astype(np.float64)
+
                 df.insert(0, 'Head', head)
                 df.insert(0, 'Layer', layer)
                 df.insert(0, CHAIN_L, chain_l)
@@ -115,7 +120,7 @@ def get_attention_weights(model_name, model_path, sequences, layers):
 
                 attentions.append(df)
 
-        return pd.concat(attentions)
+    return pd.concat(attentions)
 
 
 def save_attentions(attentions, output_path):
