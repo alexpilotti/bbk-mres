@@ -32,14 +32,15 @@ def _get_best_device():
 
 
 def _get_adjusted_sequence_numberings(chain_h_adj, chain_l_adj):
-    if chain_h_adj and chain_l_adj:
-        seq_adj = chain_h_adj
-        # TODO(alexpilotti): This might not be right in case of
-        # deletions at the end
-        chain_h_length = chain_h_adj[-1] + 1
-        seq_adj += [p + chain_h_length for p in chain_l_adj]
+    if chain_h_adj:
+        seq_adj = [(CHAIN_H, i) for i in chain_h_adj]
+        if chain_l_adj:
+            # TODO(alexpilotti): This might not be right in case of
+            # deletions at the end
+            chain_h_length = chain_h_adj[-1] + 1
+            seq_adj += [(CHAIN_L, p + chain_h_length) for p in chain_l_adj]
     else:
-        seq_adj = chain_h_adj or chain_l_adj
+        seq_adj = [(CHAIN_L, i) for i in chain_l_adj]
     return seq_adj
 
 
@@ -100,12 +101,23 @@ def get_attention_weights(model_name, model_path, sequences, layers):
                 df.rename(inplace=True, columns=dict(
                     [(t, seq_adj[i]) for i, t in
                      enumerate(seq_token_indexes)]))
+
                 # Rename rows from the token indexes to the sequence indexes
                 # using the adjusted sequence numbering
-                df["adj_index"] = seq_adj
-                df.set_index("adj_index", inplace=True)
+                df.index = pd.MultiIndex.from_tuples(
+                    seq_adj, names=["Chain_1", "Seq_1"])
 
                 df = df.stack().reset_index()
+
+                # Split the 2nd sequnce (chain, residue) tuples in two columns.
+                # Cannot use pd.MultiIndex.from_tuples() on the columns
+                # before calling stack() due to duplicates
+                df[['Chain_2', 'Seq_2']] = pd.DataFrame(
+                    df['level_2'].tolist(), index=df.index)
+                df.insert(2, 'Seq_2', df.pop('Seq_2'))
+                df.insert(2, 'Chain_2', df.pop('Chain_2'))
+                df.drop(columns=['level_2'], inplace=True)
+
                 df.rename(inplace=True, columns={
                     'adj_index': 'Seq_1', 'level_1': 'Seq_2', 0: "Weight"})
 
