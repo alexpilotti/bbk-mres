@@ -104,6 +104,8 @@ def get_attention_weights(model_name, model_path, sequences, layers):
 
                 # Rename rows from the token indexes to the sequence indexes
                 # using the adjusted sequence numbering
+                # df["adj_index"] = seq_adj
+                # df.set_index("adj_index", inplace=True)
                 df.index = pd.MultiIndex.from_tuples(
                     seq_adj, names=["Chain_1", "Seq_1"])
 

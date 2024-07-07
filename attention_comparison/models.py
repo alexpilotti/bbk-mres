@@ -132,8 +132,11 @@ def load_model(model_name, model_path):
 
     for model_loader_class in MODEL_LOADERS:
         if model_loader_class.check_model_name(model_name):
-            model_loader = model_loader_class(
-                model_path or _DEFAULT_MODEL_HUB_PATHS[model_name])
+            path = model_path or _DEFAULT_MODEL_HUB_PATHS.get(model_name)
+            if not path:
+                raise Exception(
+                    f"Default path not available for model: {model_name}")
+            model_loader = model_loader_class(path)
             return model_loader.load_model() + (model_loader.format_sequence, )
 
     raise Exception(f"Unknown model: {model_name}")
