@@ -22,3 +22,5 @@ biopython
 setuptools
 antiberty
 scikit-learn
+# ANARCI fails to install via pip. Clone it and install via setup.py install
+# anarci @ git+https://github.com/oxpig/ANARCI
