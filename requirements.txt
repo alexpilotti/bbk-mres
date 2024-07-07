@@ -22,3 +22,4 @@ biopython
 setuptools
 antiberty
 scikit-learn
+anarci
