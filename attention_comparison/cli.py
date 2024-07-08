@@ -31,6 +31,11 @@ def _parse_args():
     parser.add_argument("-p", "--model_path", required=False,
                         type=_valid_dir_arg,
                         help="The model directory")
+    parser.add_argument('--use-default-model-tokenizer', required=False,
+                        action='store_true',
+                        help="When a custom model path which does not include "
+                             "a tokenizer is provided, this option allows to "
+                             "use the default tokenizer")
     parser.add_argument("-i", "--input", required=True,
                         type=_valid_file_arg,
                         help="Sequences data in Apache Parquet format path")
@@ -65,6 +70,7 @@ if __name__ == '__main__':
         sequences, args.scheme)
 
     attentions = attention_weights.get_attention_weights(
-        args.model, args.model_path, sequences, args.layers)
+        args.model, args.model_path, args.use_default_model_tokenizer,
+        sequences, args.layers)
 
     attention_weights.save_attentions(attentions, args.output)

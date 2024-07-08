@@ -44,9 +44,10 @@ def _get_adjusted_sequence_numberings(chain_h_adj, chain_l_adj):
     return seq_adj
 
 
-def get_attention_weights(model_name, model_path, sequences, layers):
+def get_attention_weights(model_name, model_path, use_default_model_tokenizer,
+                          sequences, layers):
     model, tokenizer, format_sequence = models.load_model(
-        model_name, model_path)
+        model_name, model_path, use_default_model_tokenizer)
 
     device = _get_best_device()
     model = model.to(device)
