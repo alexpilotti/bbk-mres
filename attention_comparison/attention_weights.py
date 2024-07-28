@@ -1,14 +1,10 @@
 import pandas as pd
 import torch
 
+import common
 import models
 
 DEFAULT_NUM_LAYERS = 3
-
-CHAIN_H = "H"
-CHAIN_L = "L"
-CHAIN_HL = "HL"
-CHAIN_TYPES = [CHAIN_H, CHAIN_L, CHAIN_HL]
 
 
 def get_sequences(data_path, chain, indexes):
@@ -19,37 +15,35 @@ def get_sequences(data_path, chain, indexes):
     sequences = []
     for index in indexes:
         sequence = {}
-        if chain in [CHAIN_H, CHAIN_HL]:
-            sequence[CHAIN_H] = data.loc[index, CHAIN_H]
-        if chain in [CHAIN_L, CHAIN_HL]:
-            sequence[CHAIN_L] = data.loc[index, CHAIN_L]
+        if chain in [common.CHAIN_H,  common.CHAIN_HL]:
+            sequence[common.CHAIN_H] = data.loc[index, common.CHAIN_H]
+        if chain in [common.CHAIN_L, common.CHAIN_HL]:
+            sequence[common.CHAIN_L] = data.loc[index, common.CHAIN_L]
         sequences.append(sequence)
     return sequences
 
 
-def _get_best_device():
-    return "cuda" if torch.cuda.is_available() else "cpu"
-
-
 def _get_adjusted_sequence_numberings(chain_h_adj, chain_l_adj):
     if chain_h_adj:
-        seq_adj = [(CHAIN_H, i) for i in chain_h_adj]
+        seq_adj = [(common.CHAIN_H, i) for i in chain_h_adj]
         if chain_l_adj:
             # TODO(alexpilotti): This might not be right in case of
             # deletions at the end
             chain_h_length = chain_h_adj[-1] + 1
-            seq_adj += [(CHAIN_L, p + chain_h_length) for p in chain_l_adj]
+            seq_adj += [(common.CHAIN_L, p + chain_h_length)
+                        for p in chain_l_adj]
     else:
-        seq_adj = [(CHAIN_L, i) for i in chain_l_adj]
+        seq_adj = [(common.CHAIN_L, i) for i in chain_l_adj]
     return seq_adj
 
 
 def get_attention_weights(model_name, model_path, use_default_model_tokenizer,
                           sequences, layers):
-    model, tokenizer, format_sequence = models.load_model(
+    model_loader = models.get_model_loader(
         model_name, model_path, use_default_model_tokenizer)
+    model, tokenizer = model_loader.load_model()
 
-    device = _get_best_device()
+    device = common._get_best_device()
     model = model.to(device)
 
     attentions = []
@@ -57,12 +51,12 @@ def get_attention_weights(model_name, model_path, use_default_model_tokenizer,
     for sequence_index, sequence in enumerate(sequences):
         print(f"Sequence {sequence_index} out of {len(sequences)}")
 
-        chain_h, chain_h_adj = sequence.get(CHAIN_H, [None, None])
-        chain_l, chain_l_adj = sequence.get(CHAIN_L, [None, None])
+        chain_h, chain_h_adj = sequence.get(common.CHAIN_H, [None, None])
+        chain_l, chain_l_adj = sequence.get(common.CHAIN_L, [None, None])
 
         seq_adj = _get_adjusted_sequence_numberings(chain_h_adj, chain_l_adj)
 
-        formatted_sequence = format_sequence(chain_h, chain_l)
+        formatted_sequence = model_loader.format_sequence(chain_h, chain_l)
         inputs = tokenizer(formatted_sequence, return_tensors='pt').to(device)
         with torch.no_grad():
             outputs = model(**inputs, output_attentions=True)
@@ -129,11 +123,13 @@ def get_attention_weights(model_name, model_path, use_default_model_tokenizer,
 
                 df.insert(0, 'Head', head)
                 df.insert(0, 'Layer', layer)
-                df.insert(0, CHAIN_L, chain_l)
-                df.insert(0, CHAIN_H, chain_h)
+                df.insert(0, common.CHAIN_L, chain_l)
+                df.insert(0, common.CHAIN_H, chain_h)
 
                 df.set_index(
-                    [CHAIN_H, CHAIN_L, 'Layer', 'Head', 'Seq_1', 'Seq_2'],
+                    [common.CHAIN_H, common.CHAIN_L,
+                     'Layer', 'Head',
+                     'Seq_1', 'Seq_2'],
                     inplace=True)
 
                 attentions.append(df)

@@ -1,6 +1,9 @@
+import abc
 import os
 
 import transformers
+
+import model_embeddings
 
 
 MODEL_BALM_PAIRED = "BALM-paired"
@@ -31,17 +34,18 @@ _DEFAULT_MODEL_HUB_PATHS = {
     MODEL_ANTIBERTA2: "alchemab/antiberta2",
 }
 
+MODEL_TYPE_SEQUENCE_CLASSIFICATION = 1
+MODEL_TYPE_MASKED_LM = 2
 
-# Note(alexpilotti): doubling the length due to the additional spaces
-_ANTIBERTA2_MAX_LENGTH = 256 * 2
-_ANTIBERTY_MAX_LENGTH = (512 - 2) * 2
+_ANTIBERTA2_MAX_LENGTH = 256
+_ANTIBERTY_MAX_LENGTH = 512 - 2
 _BALM_MAX_LENGTH = 512 - 2
 # Note(alexpilotti): didn't find any resource validating a max length for ESM2,
 # expect discussions suggesting to limit it to 1024
 _ESM2_MAX_LENGTH = 512
 
 
-class BaseModelLoader:
+class BaseModelLoader(metaclass=abc.ABCMeta):
     def check_model_name(model_name):
         return False
 
@@ -75,11 +79,31 @@ class BaseModelLoader:
             from_pretrained(self._model_path, num_labels=2)
         return model, tokenizer
 
+    def load_model_for_embeddings(self):
+        tokenizer = transformers.AutoTokenizer.from_pretrained(
+            self._tokenizer_path)
+        self._cls_token = tokenizer.cls_token
+        model = transformers.AutoModelForMaskedLM.from_pretrained(
+            self._model_path)
+        return model, tokenizer
+
     def format_sequence(self, chain_h, chain_l):
         if chain_h and chain_l:
             return f"{chain_h}{self._cls_token}{self._cls_token}{chain_l}"
         else:
             return chain_h or chain_l
+
+    @abc.abstractmethod
+    def _get_model_embeddings(self):
+        pass
+
+    def get_embeddings(self, formatted_sequences):
+        return self._get_model_embeddings().get_embeddings(
+            formatted_sequences)
+
+    @abc.abstractmethod
+    def get_max_length(self):
+        pass
 
 
 class BaseBERTModelLoader(BaseModelLoader):
@@ -99,18 +123,30 @@ class ESM2ModelLoader(BaseModelLoader):
             MODEL_ESM2_35M,
             MODEL_ESM2_8M]
 
-    def format_sequence(self, chain_h, chain_l):
-        return super().format_sequence(
-            chain_h, chain_l)[:_ESM2_MAX_LENGTH]
+    def get_max_length(self):
+        return _ESM2_MAX_LENGTH
+
+    def _get_model_embeddings(self):
+        return model_embeddings.ESM2Embeddings(self)
 
 
 class AntiBERTa2ModelLoader(BaseBERTModelLoader):
     def check_model_name(model_name):
         return model_name == MODEL_ANTIBERTA2
 
-    def format_sequence(self, chain_h, chain_l):
-        return super().format_sequence(
-            chain_h, chain_l)[:_ANTIBERTA2_MAX_LENGTH]
+    def load_model_for_embeddings(self):
+        tokenizer = transformers.RoFormerTokenizer.from_pretrained(
+            self._tokenizer_path)
+        self._cls_token = tokenizer.cls_token
+        model = transformers.RoFormerForMaskedLM.from_pretrained(
+            self._model_path)
+        return model, tokenizer
+
+    def get_max_length(self):
+        return _ANTIBERTA2_MAX_LENGTH
+
+    def _get_model_embeddings(self):
+        return model_embeddings.AntiBERTa2Embeddings(self)
 
 
 class AntiBERTyModelLoader(BaseBERTModelLoader):
@@ -139,9 +175,14 @@ class AntiBERTyModelLoader(BaseBERTModelLoader):
             from_pretrained(self._model_path, num_labels=2)
         return model, tokenizer
 
-    def format_sequence(self, chain_h, chain_l):
-        return super().format_sequence(
-            chain_h, chain_l)[:_ANTIBERTY_MAX_LENGTH]
+    def load_model_for_embeddings(self):
+        raise NotImplementedError()
+
+    def get_max_length(self):
+        return _ANTIBERTY_MAX_LENGTH
+
+    def _get_model_embeddings(self):
+        return model_embeddings.AntiBERTyEmbeddings(self)
 
 
 class BALMPairedModelLoader(BaseModelLoader):
@@ -157,12 +198,22 @@ class BALMPairedModelLoader(BaseModelLoader):
         self._model_path = model_path
         self._tokenizer_path = self._model_path
 
-    def format_sequence(self, chain_h, chain_l):
-        return super().format_sequence(
-            chain_h, chain_l)[:_BALM_MAX_LENGTH]
+    def load_model_for_embeddings(self):
+        tokenizer = transformers.RobertaTokenizer.from_pretrained(
+            self._tokenizer_path)
+        self._cls_token = tokenizer.cls_token
+        model = transformers.RobertaForMaskedLM.from_pretrained(
+            self._model_path)
+        return model, tokenizer
+
+    def get_max_length(self):
+        return _BALM_MAX_LENGTH
+
+    def _get_model_embeddings(self):
+        return model_embeddings.BALMPairedEmbeddings(self)
 
 
-def load_model(model_name, model_path, use_default_model_tokenizer):
+def get_model_loader(model_name, model_path, use_default_model_tokenizer):
     MODEL_LOADERS = [AntiBERTa2ModelLoader,
                      AntiBERTyModelLoader,
                      BALMPairedModelLoader,
@@ -172,6 +223,6 @@ def load_model(model_name, model_path, use_default_model_tokenizer):
         if model_loader_class.check_model_name(model_name):
             model_loader = model_loader_class(
                 model_name, model_path, use_default_model_tokenizer)
-            return model_loader.load_model() + (model_loader.format_sequence, )
+            return model_loader
 
     raise Exception(f"Unknown model: {model_name}")
