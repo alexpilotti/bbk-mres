@@ -57,7 +57,11 @@ def get_attention_weights(model_name, model_path, use_default_model_tokenizer,
         seq_adj = _get_adjusted_sequence_numberings(chain_h_adj, chain_l_adj)
 
         formatted_sequence = model_loader.format_sequence(chain_h, chain_l)
-        inputs = tokenizer(formatted_sequence, return_tensors='pt').to(device)
+        inputs = tokenizer(
+            formatted_sequence,
+            return_tensors='pt',
+            truncation=True,
+            max_length=model_loader.get_max_length()).to(device)
         with torch.no_grad():
             outputs = model(**inputs, output_attentions=True)
 
