@@ -1,3 +1,5 @@
+import logging
+
 import pandas as pd
 import torch
 
@@ -5,6 +7,9 @@ import common
 import models
 
 DEFAULT_NUM_LAYERS = 3
+
+
+LOG = logging.getLogger(__name__)
 
 
 def get_sequences(data_path, chain, indexes):
@@ -48,8 +53,8 @@ def get_attention_weights(model_name, model_path, use_default_model_tokenizer,
 
     attentions = []
 
-    for sequence_index, sequence in enumerate(sequences):
-        print(f"Sequence {sequence_index} out of {len(sequences)}")
+    for sequence_index, sequence in enumerate(sequences, 1):
+        LOG.info(f"Sequence {sequence_index} out of {len(sequences)}")
 
         chain_h, chain_h_adj = sequence.get(common.CHAIN_H, [None, None])
         chain_l, chain_l_adj = sequence.get(common.CHAIN_L, [None, None])
@@ -142,4 +147,5 @@ def get_attention_weights(model_name, model_path, use_default_model_tokenizer,
 
 
 def save_attentions(attentions, output_path):
+    LOG.info(f"Saving attentions to \"{output_path}\"")
     attentions.to_parquet(output_path)

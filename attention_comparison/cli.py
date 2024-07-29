@@ -1,4 +1,5 @@
 import argparse
+import logging
 import pathlib
 import sys
 
@@ -134,10 +135,16 @@ def _process_embeddings_command(args):
     embeddings.save_embeddings(emb, args.output)
 
 
+def _setup_logging():
+    logging.basicConfig(level=logging.INFO)
+
+
 if __name__ == '__main__':
     args = _parse_args()
     if not args:
         sys.exit(0)
+
+    _setup_logging()
 
     if args.command == CMD_ATTENTIONS:
         _process_attentions_command(args)

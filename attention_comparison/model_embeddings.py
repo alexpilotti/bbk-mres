@@ -1,4 +1,6 @@
 import abc
+import logging
+import math
 
 import antiberty
 import torch
@@ -10,6 +12,8 @@ ANTIBERTA2_BATCH_SIZE = 128
 ANTIBERTY_BATCH_SIZE = 500
 BLAM_PAIRED_BATCH_SIZE = 64
 ESM2_BATCH_SIZE = 50
+
+LOG = logging.getLogger(__name__)
 
 
 def _batch_loader(sequences, batch_size):
@@ -35,6 +39,8 @@ class BaseEmbeddigs(metaclass=abc.ABCMeta):
 
     def get_embeddings(self, sequences):
         max_length = self._model_loader.get_max_length()
+        batch_size = self._get_batch_size()
+        num_batches = math.ceil(len(sequences) / batch_size)
 
         model, tokenizer = self._model_loader.load_model_for_embeddings()
         device = common._get_best_device()
@@ -43,8 +49,9 @@ class BaseEmbeddigs(metaclass=abc.ABCMeta):
         formatted_seqs = self._format_sequences(sequences)
 
         embeddings = None
-        for start, end, batch in _batch_loader(formatted_seqs,
-                                               self._get_batch_size()):
+        for i, (start, end, batch) in enumerate(_batch_loader(formatted_seqs,
+                                                              batch_size), 1):
+            LOG.info(f"Processing batch {i} of {num_batches}")
             x = torch.tensor([
                 tokenizer.encode(
                     seq,
@@ -76,14 +83,18 @@ class AntiBERTyEmbeddings(BaseEmbeddigs):
         return ANTIBERTY_BATCH_SIZE
 
     def get_embeddings(self, sequences):
+        batch_size = self._get_batch_size()
+        num_batches = math.ceil(len(sequences) / batch_size)
+
         antiberty_runner = antiberty.AntiBERTyRunner()
         self._model_loader._cls_token = antiberty_runner.tokenizer.cls_token
 
         formatted_seqs = self._format_sequences(sequences)
 
         embeddings = None
-        for start, end, batch in _batch_loader(formatted_seqs,
-                                               self._get_batch_size()):
+        for i, (start, end, batch) in enumerate(_batch_loader(formatted_seqs,
+                                                              batch_size), 1):
+            LOG.info(f"Processing batch {i} of {num_batches}")
             x = antiberty_runner.embed(batch)
             x = [a.mean(axis=0) for a in x]
             if embeddings is None:

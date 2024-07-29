@@ -1,4 +1,9 @@
+import logging
+
 import anarci
+
+
+LOG = logging.getLogger(__name__)
 
 SCHEME_NAMES = anarci.scheme_names
 SCHEME_IMGT = "imgt"
@@ -26,8 +31,8 @@ def _get_adj_sequence_numbering(sequence, scheme):
 def get_adjusted_sequence_numbering(sequences, scheme):
     adj_sequences = []
 
-    for sequence_index, seq_dict in enumerate(sequences):
-        print(f"Sequence {sequence_index} out of {len(sequences)}")
+    for sequence_index, seq_dict in enumerate(sequences, 1):
+        LOG.info(f"Sequence {sequence_index} out of {len(sequences)}")
         seq_dict_new = {}
         try:
             for chain, sequence in seq_dict.items():
@@ -37,6 +42,6 @@ def get_adjusted_sequence_numbering(sequences, scheme):
                 seq_dict_new[chain] = (sequence, adj_numbering)
             adj_sequences.append(seq_dict_new)
         except Exception as ex:
-            print(f"Skipping sequence {sequence_index}: {ex}")
+            LOG.info(f"Skipping sequence {sequence_index}: {ex}")
 
     return adj_sequences
