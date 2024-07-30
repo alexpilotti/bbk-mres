@@ -8,10 +8,12 @@ import common
 import embeddings
 import models
 import numbering
+import svm_embeddings_prediction
 
 
 CMD_ATTENTIONS = "attentions"
 CMD_EMBEDDINGS = "embeddings"
+CMD_SVM_EMBEDDINGS_PREDICTION = "svm-embeddings-prediction"
 
 
 def _valid_dir_arg(value):
@@ -85,6 +87,25 @@ def _add_embeddings_args(parser):
         "the sequences")
 
 
+def _add_svm_embeddings_prediction_args(parser):
+    parser.add_argument(
+        "-i", "--input", required=True,
+        type=_valid_file_arg,
+        help="Sequences data in Apache Parquet format path")
+    parser.add_argument(
+        "-e", "--embeddings", required=True,
+        type=_valid_file_arg,
+        help="Path of the embeddings file")
+    parser.add_argument(
+        "-o", "--output", required=True,
+        type=pathlib.Path,
+        help="Path of the CSV output file that will contain the score")
+    parser.add_argument(
+        '--shuffle', required=False,
+        action='store_true',
+        help="Shuffle the embedding labels")
+
+
 def _parse_args():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(
@@ -101,6 +122,11 @@ def _parse_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     _add_common_args(embeddings_parser)
     _add_embeddings_args(embeddings_parser)
+
+    svm_embeddings_prediction_parser = subparsers.add_parser(
+        CMD_SVM_EMBEDDINGS_PREDICTION, help="SVM embeddings prediction",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    _add_svm_embeddings_prediction_args(svm_embeddings_prediction_parser)
 
     # If no arguments are provided, print help
     if len(sys.argv) == 1:
@@ -136,6 +162,11 @@ def _process_embeddings_command(args):
     embeddings.save_embeddings(emb, args.output)
 
 
+def _process_svm_embeddings_prediction_command(args):
+    svm_embeddings_prediction.compute_prediction(
+        args.input, args.embeddings, args.output, args.shuffle)
+
+
 def _setup_logging():
     logging.basicConfig(level=logging.INFO)
 
@@ -151,3 +182,5 @@ if __name__ == '__main__':
         _process_attentions_command(args)
     elif args.command == CMD_EMBEDDINGS:
         _process_embeddings_command(args)
+    elif args.command == CMD_SVM_EMBEDDINGS_PREDICTION:
+        _process_svm_embeddings_prediction_command(args)
