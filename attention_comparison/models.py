@@ -176,7 +176,7 @@ class AntiBERTyModelLoader(BaseBERTModelLoader):
         return model, tokenizer
 
     def load_model_for_embeddings(self):
-        raise NotImplementedError()
+        return self.load_model()
 
     def get_max_length(self):
         return _ANTIBERTY_MAX_LENGTH

@@ -78,6 +78,13 @@ class BaseEmbeddigs(metaclass=abc.ABCMeta):
         return embeddings
 
 
+class _AntiBERTyCustomRunner(antiberty.AntiBERTyRunner):
+    def __init__(self, model, tokenizer, device):
+        self.model = model
+        self.tokenizer = tokenizer
+        self.device = device
+
+
 class AntiBERTyEmbeddings(BaseEmbeddigs):
     def _get_batch_size(self):
         return ANTIBERTY_BATCH_SIZE
@@ -86,8 +93,11 @@ class AntiBERTyEmbeddings(BaseEmbeddigs):
         batch_size = self._get_batch_size()
         num_batches = math.ceil(len(sequences) / batch_size)
 
-        antiberty_runner = antiberty.AntiBERTyRunner()
-        self._model_loader._cls_token = antiberty_runner.tokenizer.cls_token
+        model, tokenizer = self._model_loader.load_model_for_embeddings()
+        device = common._get_best_device()
+        model = model.to(device)
+
+        antiberty_runner = _AntiBERTyCustomRunner(model, tokenizer, device)
 
         formatted_seqs = self._format_sequences(sequences)
 
