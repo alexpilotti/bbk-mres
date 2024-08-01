@@ -8,9 +8,10 @@ import models
 LOG = logging.getLogger(__name__)
 
 
-def get_embeddings(model_name, model_path, sequences):
+def get_embeddings(model_name, model_path, use_default_model_tokenizer,
+                   sequences):
     model_loader = models.get_model_loader(
-        model_name, model_path, False)
+        model_name, model_path, use_default_model_tokenizer)
 
     LOG.info(f"Processing {len(sequences)} sequences")
     return model_loader.get_embeddings(sequences)

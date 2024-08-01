@@ -131,7 +131,8 @@ def _process_embeddings_command(args):
         args.input, args.chain, args.sequence_indexes)
 
     emb = embeddings.get_embeddings(
-        args.model, args.model_path, sequences)
+        args.model, args.model_path, args.use_default_model_tokenizer,
+        sequences)
     embeddings.save_embeddings(emb, args.output)
 
 
