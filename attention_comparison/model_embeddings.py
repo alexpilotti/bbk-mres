@@ -43,7 +43,7 @@ class BaseEmbeddigs(metaclass=abc.ABCMeta):
         num_batches = math.ceil(len(sequences) / batch_size)
 
         model, tokenizer = self._model_loader.load_model_for_embeddings()
-        device = common._get_best_device()
+        device = common.get_best_device()
         model = model.to(device)
 
         formatted_seqs = self._format_sequences(sequences)
@@ -94,7 +94,7 @@ class AntiBERTyEmbeddings(BaseEmbeddigs):
         num_batches = math.ceil(len(sequences) / batch_size)
 
         model, tokenizer = self._model_loader.load_model_for_embeddings()
-        device = common._get_best_device()
+        device = common.get_best_device()
         model = model.to(device)
 
         antiberty_runner = _AntiBERTyCustomRunner(model, tokenizer, device)

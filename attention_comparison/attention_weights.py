@@ -48,7 +48,7 @@ def get_attention_weights(model_name, model_path, use_default_model_tokenizer,
         model_name, model_path, use_default_model_tokenizer)
     model, tokenizer = model_loader.load_model()
 
-    device = common._get_best_device()
+    device = common.get_best_device()
     model = model.to(device)
 
     attentions = []
