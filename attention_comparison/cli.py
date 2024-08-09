@@ -52,11 +52,6 @@ def _add_common_args(parser):
         type=_valid_file_arg,
         help="Sequences data in Apache Parquet format path")
     parser.add_argument(
-        "-s", "--sequence-indexes", required=False,
-        nargs='+', type=int,
-        help="Indexes of the sequences in the data file. Accepts multiple "
-        "values")
-    parser.add_argument(
         "-c", "--chain", required=True,
         choices=common.CHAIN_TYPES,
         help="The antibody chain(s), can be H, L, HL")
@@ -77,6 +72,11 @@ def _add_attentions_args(parser):
         choices=numbering.SCHEME_NAMES,
         default=numbering.SCHEME_IMGT,
         help="The sequence numbering scheme to use")
+    parser.add_argument(
+        "-s", "--sequence-indexes", required=False,
+        nargs='+', type=int,
+        help="Indexes of the sequences in the data file. Accepts multiple "
+        "values")
 
 
 def _add_embeddings_args(parser):
@@ -85,6 +85,11 @@ def _add_embeddings_args(parser):
         type=pathlib.Path,
         help="Path of the output file that will contain the embeddings for "
         "the sequences")
+    parser.add_argument(
+        "-s", "--sequence-indexes", required=False,
+        nargs='+', type=int,
+        help="Indexes of the sequences in the data file. Accepts multiple "
+        "values")
 
 
 def _add_svm_embeddings_prediction_args(parser):
