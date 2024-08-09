@@ -42,6 +42,8 @@ _BALM_MAX_LENGTH = 512 - 2
 # expect discussions suggesting to limit it to 1024
 _ESM2_MAX_LENGTH = 512
 
+_DEFAULT_NUM_FROZEN_LAYERS = 3
+
 
 class BaseModelLoader(metaclass=abc.ABCMeta):
     def check_model_name(model_name):
@@ -103,6 +105,24 @@ class BaseModelLoader(metaclass=abc.ABCMeta):
     def get_max_length(self):
         pass
 
+    @abc.abstractmethod
+    def _get_bare_model(self, model):
+        pass
+
+    def freeze_weights(self, model, layers):
+        bare_model = self._get_bare_model(model)
+        for param in bare_model.embeddings.parameters():
+            param.requires_grad = False
+
+        if not layers:
+            num_layers = len(bare_model.encoder.layer)
+            # Pick all layers minus the last _DEFAULT_NUM_FROZEN_LAYERS
+            layers = range(0, num_layers - _DEFAULT_NUM_FROZEN_LAYERS)
+
+        for layer in [bare_model.encoder.layer[i] for i in layers]:
+            for param in layer.parameters():
+                param.requires_grad = False
+
 
 class BaseBERTModelLoader(BaseModelLoader):
     def format_sequence(self, chain_h, chain_l):
@@ -127,6 +147,9 @@ class ESM2ModelLoader(BaseModelLoader):
     def _get_model_embeddings(self):
         return model_embeddings.ESM2Embeddings(self)
 
+    def _get_bare_model(self, model):
+        return model.esm
+
 
 class AntiBERTa2ModelLoader(BaseBERTModelLoader):
     def check_model_name(model_name):
@@ -145,6 +168,9 @@ class AntiBERTa2ModelLoader(BaseBERTModelLoader):
 
     def _get_model_embeddings(self):
         return model_embeddings.AntiBERTa2Embeddings(self)
+
+    def _get_bare_model(self, model):
+        return model.roformer
 
 
 class AntiBERTyModelLoader(BaseBERTModelLoader):
@@ -182,6 +208,9 @@ class AntiBERTyModelLoader(BaseBERTModelLoader):
     def _get_model_embeddings(self):
         return model_embeddings.AntiBERTyEmbeddings(self)
 
+    def _get_bare_model(self, model):
+        return model.bert
+
 
 class BALMPairedModelLoader(BaseModelLoader):
     def check_model_name(model_name):
@@ -209,6 +238,9 @@ class BALMPairedModelLoader(BaseModelLoader):
 
     def _get_model_embeddings(self):
         return model_embeddings.BALMPairedEmbeddings(self)
+
+    def _get_bare_model(self, model):
+        return model.roberta
 
 
 def get_model_loader(model_name, model_path, use_default_model_tokenizer):
