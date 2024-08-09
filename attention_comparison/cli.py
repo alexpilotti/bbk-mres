@@ -55,11 +55,11 @@ def _add_common_args(parser):
         "-s", "--sequence-indexes", required=False,
         nargs='+', type=int,
         help="Indexes of the sequences in the data file. Accepts multiple "
-        "values"),
+        "values")
     parser.add_argument(
         "-c", "--chain", required=True,
         choices=common.CHAIN_TYPES,
-        help="The antibody chain(s), can be H, L, HL"),
+        help="The antibody chain(s), can be H, L, HL")
 
 
 def _add_attentions_args(parser):
