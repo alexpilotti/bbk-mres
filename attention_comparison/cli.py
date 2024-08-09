@@ -6,6 +6,7 @@ import sys
 import attention_weights
 import common
 import embeddings
+import fine_tuning
 import models
 import numbering
 import svm_embeddings_prediction
@@ -13,6 +14,7 @@ import svm_embeddings_prediction
 
 CMD_ATTENTIONS = "attentions"
 CMD_EMBEDDINGS = "embeddings"
+CMD_FINE_TUNING = "fine-tuning"
 CMD_SVM_EMBEDDINGS_PREDICTION = "svm-embeddings-prediction"
 
 
@@ -55,6 +57,38 @@ def _add_common_args(parser):
         "-c", "--chain", required=True,
         choices=common.CHAIN_TYPES,
         help="The antibody chain(s), can be H, L, HL")
+
+
+def _add_fine_tuning_args(parser):
+    parser.add_argument(
+        "-o", "--output", required=True,
+        type=pathlib.Path,
+        help="Directory where the model will be saved")
+    parser.add_argument(
+        "-l", "--positive-labels", required=True,
+        nargs='+', type=str,
+        help="List of positive labels")
+    parser.add_argument(
+        "-f", "--fold", required=True,
+        type=int,
+        help="Fold index to be used for training")
+    parser.add_argument(
+        "--frozen-layers", required=False,
+        nargs='+', type=int,
+        help="The model layers to freeze")
+    parser.add_argument(
+        "-b", "--batch_size", required=False,
+        type=int, default=fine_tuning.DEFAULT_BATCH_SIZE,
+        help="Batch size")
+    parser.add_argument(
+        "-e", "--epochs", required=False,
+        type=int, default=fine_tuning.DEFAULT_EPOCHS,
+        help="Number of training epochs")
+    parser.add_argument(
+        "-s", "--save-strategy", required=False,
+        choices=fine_tuning.SAVE_STRATEGIES,
+        default=fine_tuning.DEFAULT_SAVE_STRATEGY,
+        help="The model save strategy")
 
 
 def _add_attentions_args(parser):
@@ -120,6 +154,12 @@ def _parse_args():
     subparsers = parser.add_subparsers(
         dest='command', required=True, help="Available commands")
 
+    fine_tuning_parser = subparsers.add_parser(
+        CMD_FINE_TUNING, help="Fine tuning",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    _add_common_args(fine_tuning_parser)
+    _add_fine_tuning_args(fine_tuning_parser)
+
     attentions_parser = subparsers.add_parser(
         CMD_ATTENTIONS, help="Get attentions",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -145,6 +185,15 @@ def _parse_args():
             subparsers.choices[choice].print_help()
     else:
         return parser.parse_args()
+
+
+def _process_fine_tuning_command(args):
+    data = fine_tuning.load_data(args.input, args.chain, args.positive_labels)
+    processed_data = fine_tuning.process_data(data, args.fold)
+    fine_tuning.train(processed_data, args.model, args.model_path,
+                      args.use_default_model_tokenizer, args.frozen_layers,
+                      args.output, args.batch_size, args.epochs,
+                      args.save_strategy)
 
 
 def _process_attentions_command(args):
@@ -192,5 +241,7 @@ if __name__ == '__main__':
         _process_attentions_command(args)
     elif args.command == CMD_EMBEDDINGS:
         _process_embeddings_command(args)
+    elif args.command == CMD_FINE_TUNING:
+        _process_fine_tuning_command(args)
     elif args.command == CMD_SVM_EMBEDDINGS_PREDICTION:
         _process_svm_embeddings_prediction_command(args)
