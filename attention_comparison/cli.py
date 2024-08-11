@@ -39,7 +39,7 @@ def _add_common_args(parser):
         choices=models.MODELS,
         help="The model type")
     parser.add_argument(
-        "-p", "--model_path", required=False,
+        "-p", "--model-path", required=False,
         type=_valid_dir_arg,
         help="The model directory")
     parser.add_argument(
