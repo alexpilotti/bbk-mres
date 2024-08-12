@@ -5,7 +5,7 @@ output:
 params:
   chain: "HL"
 ---
-```{r warning = FALSE, message = FALSE, cache = TRUE}
+```{r warning = FALSE, message = FALSE, cache = FALSE}
 
 if(!require("ggplot2")){
   install.packages("ggplot2")
@@ -25,7 +25,7 @@ library(arrow)
 library(glue)
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 plot_seq_mean_attention <- function(data_mean, title) {
   light_chain_start <- 128
 
@@ -72,142 +72,142 @@ get_seq_mean_attention_data <- function(model, data_path) {
 }
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 data_path <- file.path(getwd(), "data")
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 model <- "AntiBERTa2"
 data = get_seq_mean_attention_data(model, data_path)
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 plot_seq_mean_attention(data$ft_mean, glue("FT: {model}"))
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 plot_seq_mean_attention(data$pt_mean, glue("PT: {model}"))
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 plot_seq_mean_attention(data$mean, glue("FT - PT: {model}"))
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 model <- "AntiBERTy"
 data = get_seq_mean_attention_data(model, data_path)
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 plot_seq_mean_attention(data$ft_mean, glue("FT: {model}"))
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 plot_seq_mean_attention(data$pt_mean, glue("PT: {model}"))
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 plot_seq_mean_attention(data$mean, glue("FT - PT: {model}"))
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 model <- "BALM-paired"
 data = get_seq_mean_attention_data(model, data_path)
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 plot_seq_mean_attention(data$ft_mean, glue("FT: {model}"))
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 plot_seq_mean_attention(data$pt_mean, glue("PT: {model}"))
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 plot_seq_mean_attention(data$mean, glue("FT - PT: {model}"))
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 model <- "ESM2-8M"
 data = get_seq_mean_attention_data(model, data_path)
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 plot_seq_mean_attention(data$ft_mean, glue("FT: {model}"))
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 plot_seq_mean_attention(data$pt_mean, glue("PT: {model}"))
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 plot_seq_mean_attention(data$mean, glue("FT - PT: {model}"))
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 model <- "ESM2-35M"
 data = get_seq_mean_attention_data(model, data_path)
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 plot_seq_mean_attention(data$ft_mean, glue("FT: {model}"))
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 plot_seq_mean_attention(data$pt_mean, glue("PT: {model}"))
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 plot_seq_mean_attention(data$mean, glue("FT - PT: {model}"))
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 model <- "ESM2-150M"
 data = get_seq_mean_attention_data(model, data_path)
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 plot_seq_mean_attention(data$ft_mean, glue("FT: {model}"))
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 plot_seq_mean_attention(data$pt_mean, glue("PT: {model}"))
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 plot_seq_mean_attention(data$mean, glue("FT - PT: {model}"))
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 model <- "ESM2-650M"
 data = get_seq_mean_attention_data(model, data_path)
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 plot_seq_mean_attention(data$ft_mean, glue("FT: {model}"))
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 plot_seq_mean_attention(data$pt_mean, glue("PT: {model}"))
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 plot_seq_mean_attention(data$mean, glue("FT - PT: {model}"))
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 model <- "ft-ESM2"
 data = get_seq_mean_attention_data(model, data_path)
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 plot_seq_mean_attention(data$ft_mean, glue("FT: {model}"))
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 plot_seq_mean_attention(data$pt_mean, glue("PT: {model}"))
 ```
 
-```{r cache = TRUE}
+```{r cache = FALSE}
 plot_seq_mean_attention(data$mean, glue("FT - PT: {model}"))
 ```
