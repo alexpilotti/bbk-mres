@@ -2,6 +2,8 @@
 output:
   html_document: default
   pdf_document: default
+params:
+  chain: "HL"
 ---
 ```{r warning = FALSE, message = FALSE, cache = TRUE}
 
@@ -45,13 +47,12 @@ plot_seq_mean_attention <- function(data_mean, title) {
 }
 
 get_seq_mean_attention_data <- function(model, data_path) {
-  data_ft <- read_parquet(file.path(data_path, glue("attention_weights_{model}_FT_selected.parquet")))
-  data_pt <- read_parquet(file.path(data_path, glue("attention_weights_{model}_PT_selected.parquet")))
+  chain <- params$chain
 
-  #head(data_ft)
-  #all.equal(data_ft, data_pt)
+  data_ft <- read_parquet(file.path(data_path, glue("attention_weights_{model}_{chain}_FT.parquet")))
+  data_pt <- read_parquet(file.path(data_path, glue("attention_weights_{model}_{chain}_PT.parquet")))
 
-  chains <- c("H", "L")
+  chains <- unlist(strsplit(chain, ""))
 
   # Skip cross-chain pairs
   data_ft_mean <- data_ft %>%
@@ -110,7 +111,7 @@ plot_seq_mean_attention(data$mean, glue("FT - PT: {model}"))
 ```
 
 ```{r cache = TRUE}
-model <- "BALM_paired"
+model <- "BALM-paired"
 data = get_seq_mean_attention_data(model, data_path)
 ```
 
@@ -127,7 +128,7 @@ plot_seq_mean_attention(data$mean, glue("FT - PT: {model}"))
 ```
 
 ```{r cache = TRUE}
-model <- "ESM2_8M"
+model <- "ESM2-8M"
 data = get_seq_mean_attention_data(model, data_path)
 ```
 
@@ -144,7 +145,7 @@ plot_seq_mean_attention(data$mean, glue("FT - PT: {model}"))
 ```
 
 ```{r cache = TRUE}
-model <- "ESM2_35M"
+model <- "ESM2-35M"
 data = get_seq_mean_attention_data(model, data_path)
 ```
 
@@ -161,7 +162,7 @@ plot_seq_mean_attention(data$mean, glue("FT - PT: {model}"))
 ```
 
 ```{r cache = TRUE}
-model <- "ESM2_150M"
+model <- "ESM2-150M"
 data = get_seq_mean_attention_data(model, data_path)
 ```
 
@@ -178,7 +179,7 @@ plot_seq_mean_attention(data$mean, glue("FT - PT: {model}"))
 ```
 
 ```{r cache = TRUE}
-model <- "ESM2_650M"
+model <- "ESM2-650M"
 data = get_seq_mean_attention_data(model, data_path)
 ```
 
@@ -195,7 +196,7 @@ plot_seq_mean_attention(data$mean, glue("FT - PT: {model}"))
 ```
 
 ```{r cache = TRUE}
-model <- "ft-ESM2_650M"
+model <- "ft-ESM2"
 data = get_seq_mean_attention_data(model, data_path)
 ```
 
