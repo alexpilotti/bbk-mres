@@ -1,10 +1,11 @@
 import collections
 import logging
 
-import datasets
 import numpy as np
 import pandas as pd
 from sklearn import model_selection
+
+import common
 
 LOG = logging.getLogger(__name__)
 
@@ -62,16 +63,13 @@ def process_data(data, fold_num):
     LOG.info(f'Train data size: {train.shape[0]}')
     LOG.info(f'Validation data size: {val.shape[0]}')
 
-    ab_dataset = datasets.DatasetDict({
-        "train": datasets.Dataset.from_pandas(train),
-        "validation": datasets.Dataset.from_pandas(val),
-        "test": datasets.Dataset.from_pandas(test)
-    })
-    class_label = datasets.ClassLabel(2, names=[0, 1])
-    return ab_dataset.map(
-        lambda seq, labels: {
-            "sequence": seq,
-            "labels": class_label.str2int(labels)
-        },
-        input_columns=["sequence", "labels"], batched=True
-    )
+    train[common.DATASET_COL_NAME] = common.TRAIN
+    val[common.DATASET_COL_NAME] = common.VALIDATION
+    test[common.DATASET_COL_NAME] = common.TEST
+
+    return pd.concat([train, val, test], ignore_index=True)
+
+
+def save_data(data, output_path):
+    LOG.info(f"Saving data to \"{output_path}\"")
+    data.to_parquet(output_path)

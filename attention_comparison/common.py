@@ -10,6 +10,12 @@ CHAIN_L = "L"
 CHAIN_HL = "HL"
 CHAIN_TYPES = [CHAIN_H, CHAIN_L, CHAIN_HL]
 
+TEST = "test"
+TRAIN = "train"
+VALIDATION = "validation"
+
+DATASET_COL_NAME = "dataset"
+
 _DEFAULT_SEED = 42
 
 

@@ -2,7 +2,9 @@ import json
 import logging
 import os
 
+import datasets
 import numpy as np
+import pandas as pd
 from sklearn import metrics
 import torch
 import transformers
@@ -42,9 +44,28 @@ def _compute_metrics(p):
     }
 
 
-def train(processed_data, model_name, model_path,
-          use_default_model_tokenizer, frozen_layers,
-          output_model_path, batch_size, epochs, save_strategy):
+def load_data(data_path):
+    data = pd.read_parquet(data_path)
+
+    ab_dataset = datasets.DatasetDict()
+    for ds in [common.TRAIN, common.VALIDATION, common.TEST]:
+        df = data[
+            data[common.DATASET_COL_NAME] == ds].drop(
+                columns=[common.DATASET_COL_NAME])
+        ab_dataset[ds] = datasets.Dataset.from_pandas(df)
+
+    class_label = datasets.ClassLabel(2, names=[0, 1])
+    return ab_dataset.map(
+        lambda seq, labels: {
+            "sequence": seq,
+            "labels": class_label.str2int(labels)
+        },
+        input_columns=["sequence", "labels"], batched=True
+    )
+
+
+def train(data, model_name, model_path, use_default_model_tokenizer,
+          frozen_layers, output_model_path, batch_size, epochs, save_strategy):
 
     model_loader = models.get_model_loader(
         model_name, model_path, use_default_model_tokenizer)
@@ -75,7 +96,7 @@ def train(processed_data, model_name, model_path,
         batch['attention_mask'] = t_inputs.attention_mask
         return batch
 
-    ab_dataset_tokenized = processed_data.map(
+    ab_dataset_tokenized = data.map(
         _preprocess,
         batched=True,
         remove_columns=['sequence']

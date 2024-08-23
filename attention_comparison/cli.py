@@ -16,6 +16,7 @@ import svm_embeddings_prediction
 CMD_ATTENTIONS = "attentions"
 CMD_EMBEDDINGS = "embeddings"
 CMD_FINE_TUNING = "fine-tuning"
+CMD_SPLIT_DATA = "split-data"
 CMD_SVM_EMBEDDINGS_PREDICTION = "svm-embeddings-prediction"
 
 
@@ -60,11 +61,19 @@ def _add_common_args(parser):
         help="The antibody chain(s), can be H, L, HL")
 
 
-def _add_fine_tuning_args(parser):
+def _add_split_data_args(parser):
+    parser.add_argument(
+        "-i", "--input", required=True,
+        type=_valid_file_arg,
+        help="Sequences data in Apache Parquet format path")
     parser.add_argument(
         "-o", "--output", required=True,
         type=pathlib.Path,
-        help="Directory where the model will be saved")
+        help="Path of the output file that will contain the splitted data")
+    parser.add_argument(
+        "-c", "--chain", required=True,
+        choices=common.CHAIN_TYPES,
+        help="The antibody chain(s), can be H, L, HL")
     parser.add_argument(
         "-l", "--positive-labels", required=True,
         nargs='+', type=str,
@@ -72,7 +81,14 @@ def _add_fine_tuning_args(parser):
     parser.add_argument(
         "-f", "--fold", required=True,
         type=int,
-        help="Fold index to be used for training")
+        help="Fold index")
+
+
+def _add_fine_tuning_args(parser):
+    parser.add_argument(
+        "-o", "--output", required=True,
+        type=pathlib.Path,
+        help="Directory where the model will be saved")
     parser.add_argument(
         "--frozen-layers", required=False,
         nargs='+', type=int,
@@ -155,6 +171,11 @@ def _parse_args():
     subparsers = parser.add_subparsers(
         dest='command', required=True, help="Available commands")
 
+    split_data_parser = subparsers.add_parser(
+        CMD_SPLIT_DATA, help="Process and split the sequences for training",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    _add_split_data_args(split_data_parser)
+
     fine_tuning_parser = subparsers.add_parser(
         CMD_FINE_TUNING, help="Fine tuning",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -188,11 +209,16 @@ def _parse_args():
         return parser.parse_args()
 
 
-def _process_fine_tuning_command(args):
+def _process_split_data_command(args):
     data = data_splitting.load_data(args.input, args.chain,
                                     args.positive_labels)
-    processed_data = data_splitting.process_data(data, args.fold)
-    fine_tuning.train(processed_data, args.model, args.model_path,
+    data = data_splitting.process_data(data, args.fold)
+    data_splitting.save_data(data, args.output)
+
+
+def _process_fine_tuning_command(args):
+    data = fine_tuning.load_data(args.input)
+    fine_tuning.train(data, args.model, args.model_path,
                       args.use_default_model_tokenizer, args.frozen_layers,
                       args.output, args.batch_size, args.epochs,
                       args.save_strategy)
@@ -245,5 +271,7 @@ if __name__ == '__main__':
         _process_embeddings_command(args)
     elif args.command == CMD_FINE_TUNING:
         _process_fine_tuning_command(args)
+    if args.command == CMD_SPLIT_DATA:
+        _process_split_data_command(args)
     elif args.command == CMD_SVM_EMBEDDINGS_PREDICTION:
         _process_svm_embeddings_prediction_command(args)
