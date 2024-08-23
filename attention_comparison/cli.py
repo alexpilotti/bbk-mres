@@ -5,6 +5,7 @@ import sys
 
 import attention_weights
 import common
+import data_splitting
 import embeddings
 import fine_tuning
 import models
@@ -188,8 +189,9 @@ def _parse_args():
 
 
 def _process_fine_tuning_command(args):
-    data = fine_tuning.load_data(args.input, args.chain, args.positive_labels)
-    processed_data = fine_tuning.process_data(data, args.fold)
+    data = data_splitting.load_data(args.input, args.chain,
+                                    args.positive_labels)
+    processed_data = data_splitting.process_data(data, args.fold)
     fine_tuning.train(processed_data, args.model, args.model_path,
                       args.use_default_model_tokenizer, args.frozen_layers,
                       args.output, args.batch_size, args.epochs,
