@@ -13,11 +13,11 @@ import collections
 LOG = logging.getLogger(__name__)
 
 
-def _load_data(data_path, embeddings_path):
+def _load_data(data_path, embeddings_path, positive_labels):
     y = pd.read_parquet(data_path)
     X = torch.load(embeddings_path, map_location=torch.device('cpu')).numpy()
     y_groups = y.subject.values
-    y = np.isin(y.label.values, ["S+", "S1+", "S2+"]).astype(int)
+    y = np.isin(y.label.values, positive_labels).astype(int)
     assert X.shape[0] == len(y)
     return X, y, y_groups
 
@@ -35,9 +35,9 @@ def _compute_metrics(preds, probs, labs):
 
 
 def compute_prediction(data_path, embeddings_path, output_path,
-                       shuffle=False, random_state=9):
+                       positive_labels, shuffle=False, random_state=9):
 
-    X, y, y_groups = _load_data(data_path, embeddings_path)
+    X, y, y_groups = _load_data(data_path, embeddings_path, positive_labels)
     y_group_counts = collections.Counter(y_groups)
 
     LOG.info(f"Class size: {collections.Counter(np.sort(y)).most_common()}")

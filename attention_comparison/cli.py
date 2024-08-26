@@ -106,6 +106,10 @@ def _add_svm_embeddings_prediction_args(parser):
         type=pathlib.Path,
         help="Path of the CSV output file that will contain the score")
     parser.add_argument(
+        "-l", "--positive-labels", required=True,
+        nargs='+', type=str,
+        help="List of positive labels")
+    parser.add_argument(
         '--shuffle', required=False,
         action='store_true',
         help="Shuffle the embedding labels")
@@ -169,7 +173,8 @@ def _process_embeddings_command(args):
 
 def _process_svm_embeddings_prediction_command(args):
     svm_embeddings_prediction.compute_prediction(
-        args.input, args.embeddings, args.output, args.shuffle)
+        args.input, args.embeddings, args.output, args.positive_labels,
+        args.shuffle)
 
 
 def _setup_logging():
