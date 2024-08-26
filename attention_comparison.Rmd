@@ -4,6 +4,7 @@ output:
   pdf_document: default
 params:
   chain: "HL"
+  data_path: !r file.path(getwd(), "data")
 ---
 ```{r warning = FALSE, message = FALSE, cache = TRUE}
 
@@ -73,7 +74,7 @@ get_seq_mean_attention_data <- function(model, data_path) {
 ```
 
 ```{r cache = TRUE}
-data_path <- file.path(getwd(), "data")
+data_path <- params$data_path
 ```
 
 ```{r cache = TRUE}
