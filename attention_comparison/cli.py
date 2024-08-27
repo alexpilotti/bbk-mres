@@ -71,10 +71,6 @@ def _add_split_data_args(parser):
         type=pathlib.Path,
         help="Path of the output file that will contain the splitted data")
     parser.add_argument(
-        "-c", "--chain", required=True,
-        choices=common.CHAIN_TYPES,
-        help="The antibody chain(s), can be H, L, HL")
-    parser.add_argument(
         "-l", "--positive-labels", required=True,
         nargs='+', type=str,
         help="List of positive labels")
@@ -210,15 +206,14 @@ def _parse_args():
 
 
 def _process_split_data_command(args):
-    data = data_splitting.load_data(args.input, args.chain,
-                                    args.positive_labels)
+    data = data_splitting.load_data(args.input, args.positive_labels)
     data = data_splitting.process_data(data, args.fold)
     data_splitting.save_data(data, args.output)
 
 
 def _process_fine_tuning_command(args):
     data = fine_tuning.load_data(args.input)
-    fine_tuning.train(data, args.model, args.model_path,
+    fine_tuning.train(data, args.chain, args.model, args.model_path,
                       args.use_default_model_tokenizer, args.frozen_layers,
                       args.output, args.batch_size, args.epochs,
                       args.save_strategy)

@@ -1,3 +1,4 @@
+from itertools import zip_longest
 import json
 import logging
 import os
@@ -56,15 +57,16 @@ def load_data(data_path):
 
     class_label = datasets.ClassLabel(2, names=[0, 1])
     return ab_dataset.map(
-        lambda seq, labels: {
-            "sequence": seq,
+        lambda chain_h, chain_l, labels: {
+            common.CHAIN_H: chain_h,
+            common.CHAIN_L: chain_l,
             "labels": class_label.str2int(labels)
         },
-        input_columns=["sequence", "labels"], batched=True
+        input_columns=[common.CHAIN_H, common.CHAIN_L, "labels"], batched=True
     )
 
 
-def train(data, model_name, model_path, use_default_model_tokenizer,
+def train(data, chain, model_name, model_path, use_default_model_tokenizer,
           frozen_layers, output_model_path, batch_size, epochs, save_strategy):
 
     model_loader = models.get_model_loader(
@@ -83,10 +85,13 @@ def train(data, model_name, model_path, use_default_model_tokenizer,
 
     def _preprocess(batch):
         formatted_seq_batch = []
-        for seq in batch['sequence']:
+
+        for chain_h, chain_l in zip_longest(
+                *[batch[c] if chain in [c, common.CHAIN_HL] else []
+                  for c in [common.CHAIN_H, common.CHAIN_L]]):
             formatted_seq_batch.append(
-                # TODO: handle HL and L cases
-                model_loader.format_sequence(seq, None))
+                model_loader.format_sequence(chain_h, chain_l))
+
         t_inputs = tokenizer(formatted_seq_batch,
                              padding="max_length",
                              truncation=True,
@@ -99,7 +104,7 @@ def train(data, model_name, model_path, use_default_model_tokenizer,
     ab_dataset_tokenized = data.map(
         _preprocess,
         batched=True,
-        remove_columns=['sequence']
+        remove_columns=[common.CHAIN_H, common.CHAIN_L]
     )
 
     common.set_seed(SEED)

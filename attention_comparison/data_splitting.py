@@ -10,9 +10,9 @@ import common
 LOG = logging.getLogger(__name__)
 
 
-def load_data(data_path, chain, positive_labels):
+def load_data(data_path, positive_labels):
     dat = pd.read_parquet(data_path)
-    X = dat.loc[:, chain]
+    X = dat.loc[:, [common.CHAIN_H, common.CHAIN_L]]
     y_groups = dat.subject.values
     y = np.isin(dat.label.values, positive_labels).astype(int)
     return X, y, y_groups
@@ -44,7 +44,7 @@ def process_data(data, fold_num):
     # for train_index, test_index in outer_cv_groups:
     LOG.info(f"##### Outer fold {i - 1} #####")
     # get the cross validation score on the test
-    X_train, X_test = X[train_index], X[test_index]
+    X_train, X_test = X.loc[train_index], X.loc[test_index]
     y_train, y_test = y[train_index], y[test_index]
     y_groups_train = y_groups[train_index]
     LOG.info(f"Train size: {len(train_index)}, test size: {len(test_index)}")
@@ -56,10 +56,14 @@ def process_data(data, fold_num):
     j, (inner_train_index, val_index) = next(enumerate(inner_cv_groups))
     X_inner_train, X_val = X.iloc[inner_train_index], X.iloc[val_index]
     y_inner_train, y_val = y[inner_train_index], y[val_index]
-    train = pd.DataFrame(
-        {'sequence': X_inner_train.values, 'labels': y_inner_train})
-    val = pd.DataFrame({'sequence': X_val.values, 'labels': y_val})
-    test = pd.DataFrame({'sequence': X_test.values, 'labels': y_test})
+
+    train = X_inner_train.copy()
+    train['labels'] = y_inner_train
+    val = X_val.copy()
+    val['labels'] = y_val
+    test = X_test.copy()
+    test['labels'] = y_test
+
     LOG.info(f'Train data size: {train.shape[0]}')
     LOG.info(f'Validation data size: {val.shape[0]}')
 
