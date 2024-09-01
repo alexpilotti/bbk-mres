@@ -31,17 +31,12 @@ plot_cv_auroc <- function(model_name) {
     file.path(data_path, glue("svm_{model_name}_{chain}_FT.csv")))
   ds2$run <- FT
 
-  ds2
-
   ds <- rbind(ds1, ds2)
-  ds
-
   ds$color <- "red"
 
   level_order_x <- c(PT, FT)
 
   p <- ggplot(data=ds, mapping=aes(x=factor(run, level=level_order_x), y=auc, color=color)) +
-  #p <- ggplot(data=ds, mapping=aes(x=reorder(run,auc), y=auc, color=color)) +
     labs(y="CV AUROC", title=model_name) +
     geom_boxplot() +
     geom_point() +
