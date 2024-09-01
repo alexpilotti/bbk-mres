@@ -26,27 +26,46 @@ plot_cv_auroc <- function(model_name) {
   ds1 <- read.csv(
     file.path(data_path, glue("svm_{model_name}_{chain}_PT.csv")))
   ds1$run <- PT
+  ds1$color <- "red"
 
   ds2 <- read.csv(
     file.path(data_path, glue("svm_{model_name}_{chain}_FT.csv")))
   ds2$run <- FT
+  ds2$color <- "red"
 
-  ds <- rbind(ds1, ds2)
-  ds$color <- "red"
+  X_s_offset <- max(ds1$X) + 1
+
+  ds1_s <- read.csv(
+    file.path(data_path, glue("svm_{model_name}_{chain}_PT_shuffled.csv")))
+  ds1_s$X <- ds1_s$X + X_s_offset
+  ds1_s$run <- PT
+  ds1_s$color <- "grey"
+
+  ds2_s <- read.csv(
+    file.path(data_path, glue("svm_{model_name}_{chain}_FT_shuffled.csv")))
+  ds2_s$X <- ds2_s$X + X_s_offset
+  ds2_s$run <- FT
+  ds2_s$color <- "grey"
+
+  ds <- rbind(ds1, ds2, ds1_s, ds2_s)
 
   level_order_x <- c(PT, FT)
 
-  p <- ggplot(data=ds, mapping=aes(x=factor(run, level=level_order_x), y=auc, color=color)) +
-    labs(y="CV AUROC", title=model_name) +
-    geom_boxplot() +
+  p <- ggplot(data=ds, mapping=aes(
+              x=factor(run, level=level_order_x), y=auc, color=color)) +
+    labs(y="CV AUROC", title=model_name,
+         caption = "Gray box plots: randomly shuffled labels") +
+    geom_boxplot(position = "identity") +
+    scale_color_identity() +
     geom_point() +
-    geom_line(aes(group=X), color="grey", linetype="solid", size=0.5) +
+    geom_line(aes(group=X), color="grey", linetype="solid", linewidth=0.5) +
     theme_minimal() +
     theme(legend.position = "none",
           plot.title = element_text(hjust=0.5, size=14, face="bold"),
           axis.title.x=element_blank(),
           axis.text.x = element_text(size=12, face="bold"),
-          axis.title.y = element_text(margin=margin(0,10,0,0)))
+          axis.title.y = element_text(margin=margin(0,10,0,0)),
+          plot.caption = element_text(hjust = 0.5, face = "italic"))
   p
 }
 ```
