@@ -12,6 +12,7 @@ LOG = logging.getLogger(__name__)
 
 def load_data(data_path, positive_labels):
     dat = pd.read_parquet(data_path)
+    dat.reset_index(inplace=True)
     X = dat.loc[:, [common.CHAIN_H, common.CHAIN_L]]
     y_groups = dat.subject.values
     y = np.isin(dat.label.values, positive_labels).astype(int)
