@@ -10,14 +10,18 @@ import embeddings
 import fine_tuning
 import models
 import numbering
+import sequence_identity
 import svm_embeddings_prediction
 
 
 CMD_ATTENTIONS = "attentions"
 CMD_EMBEDDINGS = "embeddings"
 CMD_FINE_TUNING = "fine-tuning"
+CMD_REMOVE_SIMILAR_SEQUENCES = "remove-similar-sequences"
 CMD_SPLIT_DATA = "split-data"
 CMD_SVM_EMBEDDINGS_PREDICTION = "svm-embeddings-prediction"
+
+DEFAULT_MIN_SEQ_ID = 0.9
 
 
 def _valid_dir_arg(value):
@@ -162,6 +166,25 @@ def _add_svm_embeddings_prediction_args(parser):
         help="Shuffle the embedding labels")
 
 
+def _add_remove_similar_sequences_args(parser):
+    parser.add_argument(
+        "-i", "--input", required=True,
+        type=_valid_file_arg,
+        help="Sequences data in Apache Parquet format path")
+    parser.add_argument(
+        "-o", "--output", required=True,
+        type=pathlib.Path,
+        help="Sequences data in Apache Parquet format path")
+    parser.add_argument(
+        "-c", "--chain", required=True,
+        choices=common.CHAIN_TYPES,
+        help="The antibody chain(s), can be H, L, HL")
+    parser.add_argument(
+        "-m", "--min-seq-id", required=True,
+        type=float, default=DEFAULT_MIN_SEQ_ID,
+        help="Mininum sequence identity")
+
+
 def _parse_args():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(
@@ -194,6 +217,11 @@ def _parse_args():
         CMD_SVM_EMBEDDINGS_PREDICTION, help="SVM embeddings prediction",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     _add_svm_embeddings_prediction_args(svm_embeddings_prediction_parser)
+
+    remove_similar_sequences_parser = subparsers.add_parser(
+        CMD_REMOVE_SIMILAR_SEQUENCES, help="Remove similar sequences",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    _add_remove_similar_sequences_args(remove_similar_sequences_parser)
 
     # If no arguments are provided, print help
     if len(sys.argv) == 1:
@@ -249,6 +277,15 @@ def _process_svm_embeddings_prediction_command(args):
         args.shuffle)
 
 
+def _process_remove_similar_sequences_command(args):
+    input_data = sequence_identity.read_data(args.input)
+
+    output_data = sequence_identity.remove_similar_sequences(
+        input_data, args.min_seq_id, args.chain)
+
+    sequence_identity.save_data(output_data, args.output)
+
+
 def _setup_logging():
     logging.basicConfig(level=logging.INFO)
 
@@ -266,6 +303,8 @@ if __name__ == '__main__':
         _process_embeddings_command(args)
     elif args.command == CMD_FINE_TUNING:
         _process_fine_tuning_command(args)
+    elif args.command == CMD_REMOVE_SIMILAR_SEQUENCES:
+        _process_remove_similar_sequences_command(args)
     if args.command == CMD_SPLIT_DATA:
         _process_split_data_command(args)
     elif args.command == CMD_SVM_EMBEDDINGS_PREDICTION:
