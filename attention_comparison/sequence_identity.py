@@ -32,7 +32,7 @@ def _read_fasta(fasta_path):
     return (desc, seqs)
 
 
-def _compute_identity(input_data, min_seq_id, chain):
+def _get_cluster_representative_sequences(input_data, min_seq_id, chain):
     with tempfile.TemporaryDirectory() as tmp_dir:
         db_dir = os.path.join(tmp_dir, DB_NAME)
         os.makedirs(db_dir)
@@ -115,7 +115,8 @@ def remove_similar_sequences(input_data, min_seq_id, chain):
     LOG.info(f"Number of duplicate rows removed based on chain {chain}: "
              f"{len(input_data) - len(unique_input_data)}")
 
-    identity_data = _compute_identity(unique_input_data, min_seq_id, chain)
+    identity_data = _get_cluster_representative_sequences(
+        unique_input_data, min_seq_id, chain)
 
     output_data = unique_input_data.loc[identity_data.index]
 
