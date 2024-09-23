@@ -57,3 +57,9 @@ def result2flat(query_db_path, target_db_path, result_db_path, fasta_path):
     _run_process(
         ["mmseqs", "result2flat", query_db_path, target_db_path,
          result_db_path, fasta_path, "--use-fasta-header"])
+
+
+def createtsv(query_db_path, target_db_path, result_db_path, tsv_path):
+    _run_process(
+        ["mmseqs", "createtsv", query_db_path, target_db_path, result_db_path,
+         tsv_path])

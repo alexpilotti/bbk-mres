@@ -9,13 +9,13 @@ import mmseq2_wrapper
 
 LOG = logging.getLogger(__name__)
 
-
 DB_NAME = "db"
 CLUSTER_DB_NAME = "cluster_db"
 REP_SEQ_DB_NAME = "rep_seq_db"
 TMP_DIR = "tmp"
 INPUT_FASTA_FILE = "input_data.fasta"
 OUTPUT_FASTA_FILE = "output_data.fasta"
+CLUSTERS_TSV_FILE = "clusters.tsv"
 
 
 def _save_fasta(data, fasta_path, column_name):
@@ -63,7 +63,41 @@ def _compute_identity(input_data, cutoff, chain):
                                    output_fasta_path)
 
         ids, sequences = _read_fasta(output_fasta_path)
-        return pd.DataFrame({chain: sequences}, index=map(int, ids))
+        cluster_reps = pd.DataFrame({chain: sequences}, index=map(int, ids))
+
+        LOG.info("Total representative sequences identified: "
+                 f"{len(cluster_reps)}")
+
+        return _check_label_consistency(tmp_dir, input_data, cluster_reps,
+                                        db_path, cluster_db_path)
+
+
+def _check_label_consistency(tmp_dir, input_data, cluster_reps, db_path,
+                             cluster_db_path):
+    """
+    Removes sequences from cluster_reps where labels in the related cluster
+    do not have consistent values.
+    """
+    clusters_tsv_path = os.path.join(tmp_dir, CLUSTERS_TSV_FILE)
+    mmseq2_wrapper.createtsv(db_path, db_path, cluster_db_path,
+                             clusters_tsv_path)
+
+    df = pd.read_csv(clusters_tsv_path, sep='\t', header=None,
+                     names=['Rep', 'Seq'])
+    clusters = df.groupby('Rep')['Seq']
+
+    updated_cluster_reps = cluster_reps
+    for rep, seqs in clusters:
+        if len(input_data.loc[seqs]["label"].unique()) > 1:
+            LOG.debug(f"Removing representative sequence with index {rep} due "
+                      f"to inconsistent labels in the cluster")
+            updated_cluster_reps = updated_cluster_reps.drop(rep)
+
+    LOG.info("Total representative sequences removed due to inconsistent "
+             "labels in the corresponding clusters: "
+             f"{len(cluster_reps) - len(updated_cluster_reps)}")
+
+    return updated_cluster_reps
 
 
 def _drop_duplicates(input_data, chain):
