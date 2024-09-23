@@ -32,7 +32,7 @@ def _read_fasta(fasta_path):
     return (desc, seqs)
 
 
-def _compute_identity(input_data, cutoff, chain):
+def _compute_identity(input_data, min_seq_id, chain):
     with tempfile.TemporaryDirectory() as tmp_dir:
         db_dir = os.path.join(tmp_dir, DB_NAME)
         os.makedirs(db_dir)
@@ -49,7 +49,8 @@ def _compute_identity(input_data, cutoff, chain):
         mmseq2_tmp_dir = os.path.join(tmp_dir, TMP_DIR)
         os.makedirs(mmseq2_tmp_dir)
 
-        mmseq2_wrapper.cluster(db_path, cluster_db_path, mmseq2_tmp_dir)
+        mmseq2_wrapper.cluster(db_path, cluster_db_path, mmseq2_tmp_dir,
+                               min_seq_id)
 
         rep_seq_db_dir = os.path.join(tmp_dir, REP_SEQ_DB_NAME)
         os.makedirs(rep_seq_db_dir)
@@ -107,14 +108,14 @@ def _drop_duplicates(input_data, chain):
     return input_data.drop_duplicates(subset=subset)
 
 
-def remove_similar_sequences(input_data, cutoff, chain):
+def remove_similar_sequences(input_data, min_seq_id, chain):
     LOG.info(f"Number of initial rows: {len(input_data)}")
 
     unique_input_data = _drop_duplicates(input_data, chain)
     LOG.info(f"Number of duplicate rows removed based on chain {chain}: "
              f"{len(input_data) - len(unique_input_data)}")
 
-    identity_data = _compute_identity(unique_input_data, cutoff, chain)
+    identity_data = _compute_identity(unique_input_data, min_seq_id, chain)
 
     output_data = unique_input_data.loc[identity_data.index]
 
