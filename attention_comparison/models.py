@@ -9,6 +9,7 @@ import model_embeddings
 MODEL_BALM_PAIRED = "BALM-paired"
 MODEL_ANTIBERTY = "AntiBERTy"
 MODEL_ANTIBERTA2 = "AntiBERTa2"
+MODEL_ESM2_3B = "ESM2-3B"
 MODEL_ESM2_650M = "ESM2-650M"
 MODEL_ESM2_150M = "ESM2-150M"
 MODEL_ESM2_35M = "ESM2-35M"
@@ -18,6 +19,7 @@ MODELS = [
     MODEL_BALM_PAIRED,
     MODEL_ANTIBERTY,
     MODEL_ANTIBERTA2,
+    MODEL_ESM2_3B,
     MODEL_ESM2_650M,
     MODEL_ESM2_150M,
     MODEL_ESM2_35M,
@@ -25,6 +27,7 @@ MODELS = [
 ]
 
 _DEFAULT_MODEL_HUB_PATHS = {
+    MODEL_ESM2_3B: "facebook/esm2_t36_3B_UR50D",
     MODEL_ESM2_650M: "facebook/esm2_t33_650M_UR50D",
     MODEL_ESM2_150M: "facebook/esm2_t30_150M_UR50D",
     MODEL_ESM2_35M: "facebook/esm2_t12_35M_UR50D",
@@ -136,6 +139,7 @@ class BaseBERTModelLoader(BaseModelLoader):
 class ESM2ModelLoader(BaseModelLoader):
     def check_model_name(model_name):
         return model_name in [
+            MODEL_ESM2_3B,
             MODEL_ESM2_650M,
             MODEL_ESM2_150M,
             MODEL_ESM2_35M,
