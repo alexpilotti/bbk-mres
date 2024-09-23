@@ -19,24 +19,13 @@ def create_index(seq_db_path, tmp_path):
     return os.path.join(os.path.dirname(seq_db_path), INDEX_NAME)
 
 
-def _add_m8_header(m8_path, format_output):
-    with open(m8_path, 'r') as f:
-        lines = f.readlines()
-    lines.insert(0, "\t".join(format_output) + "\n")
-    with open(m8_path, 'w') as f:
-        f.writelines(lines)
-
-
 def easy_search(target_db_path, index_path, fasta_path, m8_path,
-                alignment_mode, format_output, add_header=True):
+                alignment_mode, format_output):
     _run_process(
         ["mmseqs", "easy-search", "--alignment-mode", alignment_mode,
          "--format-output", ",".join(
              format_output), fasta_path, target_db_path, m8_path,
          index_path])
-
-    if add_header:
-        _add_m8_header(m8_path, format_output)
 
 
 def cluster(seq_db_path, cluster_db_path, tmp_path, min_seq_id=0.9,
