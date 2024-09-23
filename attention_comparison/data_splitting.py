@@ -72,7 +72,11 @@ def process_data(data, fold_num):
     val[common.DATASET_COL_NAME] = common.VALIDATION
     test[common.DATASET_COL_NAME] = common.TEST
 
-    return pd.concat([train, val, test], ignore_index=True)
+    combined_data = pd.concat([train, val, test], ignore_index=True)
+    # TODO(alexpilotti): avoid introducing duplicates in inner_train_index
+    combined_data = combined_data.drop_duplicates(
+        subset=[common.CHAIN_H, common.CHAIN_L])
+    return combined_data
 
 
 def save_data(data, output_path):
