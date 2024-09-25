@@ -1,0 +1,100 @@
+---
+title: "Metrics"
+output:
+  html_document: default
+  pdf_document: default
+params:
+  chain: "HL"
+  data_path: !r file.path(getwd(), "data")
+---
+```{r warning = FALSE, message = FALSE, cache = FALSE}
+if(!require("jsonlite")) {
+  install.packages("jsonlite")
+}
+library(jsonlite)
+
+if(!require("ggplot2")) {
+  install.packages("ggplot2")
+}
+library(ggplot2)
+
+library(glue)
+```
+
+```{r cache = FALSE}
+data_path <- params$data_path
+chain <- params$chain
+
+metrics <- data.frame()
+models_dir <- file.path(data_path, "models")
+subdirs <- list.dirs(models_dir, full.names = TRUE, recursive = FALSE)
+subdirs <- subdirs[grepl(glue("_{chain}$"), subdirs)]
+
+for (subdir in subdirs) {
+  stats_path <- file.path(subdir, "model_test_stats.json")
+  if (file.exists(stats_path)) {
+    json_data <- fromJSON(stats_path)
+    json_data <- tail(json_data, n = 1)
+    json_data <- json_data[, colSums(is.na(json_data)) == 0]
+    colnames(json_data) <- gsub("^test_", "", colnames(json_data))
+
+    model_name <- sub(glue("_{chain}$"), "", basename(subdir))
+    json_data$model <- model_name
+    metrics <- rbind(metrics, json_data)
+  }
+}
+
+plot_data <- function(metrics, metric_name) {
+  data_range <- max(metrics[metric_name]) - min(metrics[metric_name])
+  binwidth_value <- data_range / 30
+
+  p <- ggplot(metrics, aes(x = model, y = .data[[metric_name]], fill = model)) +
+    geom_dotplot(
+      binaxis = 'y',
+      stackdir = 'center',
+      binwidth = binwidth_value,
+      show.legend = FALSE
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(
+        hjust = 0.5,
+        face = "bold",
+        size = 16
+      ),
+      axis.title.x = element_text(margin = margin(t = 10)),
+      axis.title.y = element_text(margin = margin(r = 10))
+    ) +
+    labs(title = metric_name, x = "Model", y = metric_name) +
+    scale_x_discrete(guide = guide_axis(n.dodge = 2))
+  p
+}
+```
+
+```{r cache = FALSE}
+plot_data(metrics, "precision")
+```
+
+```{r cache = FALSE}
+plot_data(metrics, "recall")
+```
+
+```{r cache = FALSE}
+plot_data(metrics, "f1")
+```
+
+```{r cache = FALSE}
+plot_data(metrics, "apr")
+```
+
+```{r cache = FALSE}
+plot_data(metrics, "balanced_accuracy")
+```
+
+```{r cache = FALSE}
+plot_data(metrics, "auc")
+```
+
+```{r cache = FALSE}
+plot_data(metrics, "mcc")
+```
