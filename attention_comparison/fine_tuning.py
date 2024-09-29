@@ -101,6 +101,7 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
     model, tokenizer = model_loader.load_model()
 
     device = common.get_best_device()
+    LOG.info(f"Using device: {device}")
     model = model.to(device)
 
     model_loader.freeze_weights(model, frozen_layers)
