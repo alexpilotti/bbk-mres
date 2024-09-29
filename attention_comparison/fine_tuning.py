@@ -48,6 +48,8 @@ def _compute_metrics(p):
 
 def load_data(data_path):
     data = pd.read_parquet(data_path)
+    data = data[[common.CHAIN_H, common.CHAIN_L, LABELS_COL_NAME,
+                 common.DATASET_COL_NAME]]
 
     ab_dataset = datasets.DatasetDict()
     for ds in [common.TRAIN, common.VALIDATION, common.TEST]:
