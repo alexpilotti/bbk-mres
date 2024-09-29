@@ -1,5 +1,4 @@
 from itertools import zip_longest
-import json
 import logging
 import os
 
@@ -66,21 +65,7 @@ def load_data(data_path):
     )
 
 
-def train(data, chain, model_name, model_path, use_default_model_tokenizer,
-          frozen_layers, output_model_path, batch_size, epochs, save_strategy):
-
-    model_loader = models.get_model_loader(
-        model_name, model_path, use_default_model_tokenizer)
-    model, tokenizer = model_loader.load_model()
-
-    device = common.get_best_device()
-    model = model.to(device)
-
-    model_loader.freeze_weights(model, frozen_layers)
-
-    model_size = sum(p.numel() for p in model.parameters())
-    LOG.info(f"Model size: {model_size / 1e6:.2f}M")
-
+def _get_dataset_tokenized(data, chain, tokenizer, model_loader):
     max_length = model_loader.get_max_length()
 
     def _preprocess(batch):
@@ -101,11 +86,30 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
         batch['attention_mask'] = t_inputs.attention_mask
         return batch
 
-    ab_dataset_tokenized = data.map(
+    return data.map(
         _preprocess,
         batched=True,
         remove_columns=[common.CHAIN_H, common.CHAIN_L]
     )
+
+
+def train(data, chain, model_name, model_path, use_default_model_tokenizer,
+          frozen_layers, output_model_path, batch_size, epochs, save_strategy):
+
+    model_loader = models.get_model_loader(
+        model_name, model_path, use_default_model_tokenizer)
+    model, tokenizer = model_loader.load_model()
+
+    device = common.get_best_device()
+    model = model.to(device)
+
+    model_loader.freeze_weights(model, frozen_layers)
+
+    model_size = sum(p.numel() for p in model.parameters())
+    LOG.info(f"Model size: {model_size / 1e6:.2f}M")
+
+    ab_dataset_tokenized = _get_dataset_tokenized(
+        data, chain, tokenizer, model_loader)
 
     common.set_seed(SEED)
 
@@ -148,6 +152,4 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
     out.append(outputs.metrics)
 
     out_file = os.path.join(output_model_path, "model_test_stats.json")
-
-    with open(out_file, 'w') as f:
-        json.dump(out, f, indent=4)
+    common.save_json_file(out, out_file)
