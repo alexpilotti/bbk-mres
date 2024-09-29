@@ -24,6 +24,8 @@ DEFAULT_SAVE_STRATEGY = transformers.IntervalStrategy.NO
 LR = 1e-5
 SEED = 42
 
+LABELS_COL_NAME = "labels"
+
 
 def _compute_metrics(p):
     predictions, labs = p
@@ -59,9 +61,10 @@ def load_data(data_path):
         lambda chain_h, chain_l, labels: {
             common.CHAIN_H: chain_h,
             common.CHAIN_L: chain_l,
-            "labels": class_label.str2int(labels)
+            LABELS_COL_NAME: class_label.str2int(labels)
         },
-        input_columns=[common.CHAIN_H, common.CHAIN_L, "labels"], batched=True
+        input_columns=[common.CHAIN_H, common.CHAIN_L,
+                       LABELS_COL_NAME], batched=True
     )
 
 
