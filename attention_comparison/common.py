@@ -1,3 +1,4 @@
+import json
 import os
 import random
 
@@ -31,3 +32,8 @@ def set_seed(seed: int = _DEFAULT_SEED):
     np.random.seed(seed)
     random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed if seed else 0)
+
+
+def save_json_file(data, path, indent=4):
+    with open(path, 'w') as f:
+        json.dump(data, f, indent=indent)
