@@ -134,8 +134,8 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
         model,
         args=training_args,
         tokenizer=tokenizer,
-        train_dataset=ab_dataset_tokenized['train'],
-        eval_dataset=ab_dataset_tokenized['validation'],
+        train_dataset=ab_dataset_tokenized[common.TRAIN],
+        eval_dataset=ab_dataset_tokenized[common.VALIDATION],
         compute_metrics=_compute_metrics
     )
 
@@ -145,7 +145,7 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
         trainer.save_model()
 
     model.eval()
-    outputs = trainer.predict(ab_dataset_tokenized["test"])
+    outputs = trainer.predict(ab_dataset_tokenized[common.TEST])
     LOG.info(outputs.metrics)
 
     out = trainer.state.log_history
