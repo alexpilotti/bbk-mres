@@ -17,6 +17,7 @@ import svm_embeddings_prediction
 CMD_ATTENTIONS = "attentions"
 CMD_EMBEDDINGS = "embeddings"
 CMD_FINE_TUNING = "fine-tuning"
+CMD_PREDICT = "predict"
 CMD_REMOVE_SIMILAR_SEQUENCES = "remove-similar-sequences"
 CMD_SPLIT_DATA = "split-data"
 CMD_SVM_EMBEDDINGS_PREDICTION = "svm-embeddings-prediction"
@@ -106,6 +107,13 @@ def _add_fine_tuning_args(parser):
         choices=fine_tuning.SAVE_STRATEGIES,
         default=fine_tuning.DEFAULT_SAVE_STRATEGY,
         help="The model save strategy")
+
+
+def _add_predict_args(parser):
+    parser.add_argument(
+        "-o", "--output", required=True,
+        type=pathlib.Path,
+        help="Path of the file containing the prediction metrics")
 
 
 def _add_attentions_args(parser):
@@ -201,6 +209,12 @@ def _parse_args():
     _add_common_args(fine_tuning_parser)
     _add_fine_tuning_args(fine_tuning_parser)
 
+    predict_parser = subparsers.add_parser(
+        CMD_PREDICT, help="Predict",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    _add_common_args(predict_parser)
+    _add_predict_args(predict_parser)
+
     attentions_parser = subparsers.add_parser(
         CMD_ATTENTIONS, help="Get attentions",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -245,6 +259,14 @@ def _process_fine_tuning_command(args):
                       args.use_default_model_tokenizer, args.frozen_layers,
                       args.output, args.batch_size, args.epochs,
                       args.save_strategy)
+
+
+def _process_predict_command(args):
+    data = fine_tuning.load_data(args.input)
+    _, metrics = fine_tuning.predict(data, args.chain, args.model,
+                                     args.model_path,
+                                     args.use_default_model_tokenizer)
+    common.save_json_file(metrics, args.output)
 
 
 def _process_attentions_command(args):
@@ -303,6 +325,8 @@ if __name__ == '__main__':
         _process_embeddings_command(args)
     elif args.command == CMD_FINE_TUNING:
         _process_fine_tuning_command(args)
+    elif args.command == CMD_PREDICT:
+        _process_predict_command(args)
     elif args.command == CMD_REMOVE_SIMILAR_SEQUENCES:
         _process_remove_similar_sequences_command(args)
     if args.command == CMD_SPLIT_DATA:

@@ -154,3 +154,34 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
 
     out_file = os.path.join(output_model_path, "model_test_stats.json")
     common.save_json_file(out, out_file)
+
+
+def predict(data, chain, model_name, model_path, use_default_model_tokenizer):
+    model_loader = models.get_model_loader(
+        model_name, model_path, use_default_model_tokenizer)
+    model, tokenizer = model_loader.load_model()
+
+    device = common.get_best_device()
+    LOG.info(f"Using device: {device}")
+    model = model.to(device)
+
+    ab_dataset_tokenized = _get_dataset_tokenized(
+        data, chain, tokenizer, model_loader)
+
+    trainer = transformers.Trainer(
+        model,
+        tokenizer=tokenizer
+    )
+
+    outputs = trainer.predict(ab_dataset_tokenized[common.TEST])
+    metrics = _compute_metrics((outputs.predictions, outputs.label_ids))
+    probs = torch.softmax(
+        torch.from_numpy(outputs.predictions), dim=1).detach().numpy()[:, -1]
+
+    print(f"Predicted the binding probability of {probs.shape[0]} sequences")
+
+    metrics['model_name'] = model_name
+    metrics['model_path'] = model_path
+    metrics['test_loss'] = outputs.metrics['test_loss']
+
+    return probs, metrics
