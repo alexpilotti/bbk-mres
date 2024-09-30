@@ -19,6 +19,8 @@ if(!require("ggplot2")) {
 library(ggplot2)
 
 library(glue)
+
+library(stringr)
 ```
 
 ```{r cache = FALSE}
@@ -26,22 +28,31 @@ data_path <- params$data_path
 chain <- params$chain
 
 metrics <- data.frame()
-models_dir <- file.path(data_path, "models")
-subdirs <- list.dirs(models_dir, full.names = TRUE, recursive = FALSE)
-subdirs <- subdirs[grepl(glue("_{chain}$"), subdirs)]
 
-for (subdir in subdirs) {
-  stats_path <- file.path(subdir, "model_test_stats.json")
-  if (file.exists(stats_path)) {
-    json_data <- fromJSON(stats_path)
-    json_data <- tail(json_data, n = 1)
-    json_data <- json_data[, colSums(is.na(json_data)) == 0]
-    colnames(json_data) <- gsub("^test_", "", colnames(json_data))
+json_files <- list.files(
+  path = data_path,
+  pattern = glue("^predict_metrics_.*_{chain}\\.json$"),
+  full.names = TRUE
+)
 
-    model_name <- sub(glue("_{chain}$"), "", basename(subdir))
-    json_data$model <- model_name
-    metrics <- rbind(metrics, json_data)
-  }
+for (json_file in json_files) {
+  json_data <- fromJSON(json_file)
+  model_name <- str_match(basename(json_file),
+                          glue("^predict_metrics_(.*?)_{chain}\\.json$"))[, 2]
+
+  json_data <- data.frame(
+    precision = json_data$precision,
+    recall = json_data$recall,
+    f1 = json_data$f1,
+    apr = json_data$apr,
+    balanced_accuracy = json_data$balanced_accuracy,
+    auc = json_data$auc,
+    mcc = json_data$mcc,
+    test_loss = json_data$test_loss,
+    model = model_name
+  )
+
+  metrics <- rbind(metrics, json_data)
 }
 
 plot_data <- function(metrics, metric_name) {
