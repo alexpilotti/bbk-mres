@@ -75,6 +75,7 @@ metrics <- rbind(metrics_pt, metrics_ft)
 plot_data <- function(metrics, metric_name) {
   data_range <- max(metrics[metric_name]) - min(metrics[metric_name])
   binwidth_value <- data_range / 30
+  y_label = tools::toTitleCase(metric_name)
 
   p <- ggplot(metrics, aes(x = model, y = .data[[metric_name]], fill = training)) +
     geom_dotplot(
@@ -98,9 +99,9 @@ plot_data <- function(metrics, metric_name) {
       values = c(FT = "#00BFC4", PT = "#F8766D")
     ) +
     labs(
-      title = metric_name,
+      title = y_label,
       x = "Model",
-      y = metric_name,
+      y = y_label,
       fill = "Training"
     ) +
     scale_x_discrete(guide = guide_axis(n.dodge = 2))
