@@ -18,9 +18,12 @@ if(!require("ggplot2")) {
 }
 library(ggplot2)
 
-library(glue)
-
+if(!require("stringr")) {
+  install.packages("stringr")
+}
 library(stringr)
+
+library(glue)
 ```
 
 ```{r cache = FALSE}
