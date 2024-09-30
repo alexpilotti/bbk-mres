@@ -89,7 +89,7 @@ def _check_label_consistency(tmp_dir, input_data, cluster_reps, db_path,
 
     updated_cluster_reps = cluster_reps
     for rep, seqs in clusters:
-        if len(input_data.loc[seqs]["label"].unique()) > 1:
+        if len(input_data.loc[seqs][common.LABEL_COL_NAME].unique()) > 1:
             LOG.debug(f"Removing representative sequence with index {rep} due "
                       f"to inconsistent labels in the cluster")
             updated_cluster_reps = updated_cluster_reps.drop(rep)

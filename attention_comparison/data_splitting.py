@@ -59,11 +59,11 @@ def process_data(data, fold_num):
     y_inner_train, y_val = y[inner_train_index], y[val_index]
 
     train = X_inner_train.copy()
-    train['labels'] = y_inner_train
+    train[common.LABEL_COL_NAME] = y_inner_train
     val = X_val.copy()
-    val['labels'] = y_val
+    val[common.LABEL_COL_NAME] = y_val
     test = X_test.copy()
-    test['labels'] = y_test
+    test[common.LABEL_COL_NAME] = y_test
 
     LOG.info(f'Train data size: {train.shape[0]}')
     LOG.info(f'Validation data size: {val.shape[0]}')

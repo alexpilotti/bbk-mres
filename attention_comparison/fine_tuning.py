@@ -46,7 +46,7 @@ def _compute_metrics(p):
 
 def load_data(data_path):
     data = pd.read_parquet(data_path)
-    data = data[[common.CHAIN_H, common.CHAIN_L, common.LABELS_COL_NAME,
+    data = data[[common.CHAIN_H, common.CHAIN_L, common.LABEL_COL_NAME,
                  common.DATASET_COL_NAME]]
 
     ab_dataset = datasets.DatasetDict()
@@ -61,10 +61,10 @@ def load_data(data_path):
         lambda chain_h, chain_l, labels: {
             common.CHAIN_H: chain_h,
             common.CHAIN_L: chain_l,
-            common.LABELS_COL_NAME: class_label.str2int(labels)
+            common.LABEL_COL_NAME: class_label.str2int(labels)
         },
         input_columns=[common.CHAIN_H, common.CHAIN_L,
-                       common.LABELS_COL_NAME], batched=True
+                       common.LABEL_COL_NAME], batched=True
     )
 
 
