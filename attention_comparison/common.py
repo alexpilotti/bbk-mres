@@ -16,6 +16,7 @@ TRAIN = "train"
 VALIDATION = "validation"
 
 DATASET_COL_NAME = "dataset"
+LABELS_COL_NAME = "labels"
 
 _DEFAULT_SEED = 42
 
