@@ -110,8 +110,15 @@ def _drop_duplicates(input_data, chain):
     return input_data.drop_duplicates(subset=subset)
 
 
+def _format_label_counts(data):
+    counts = data[common.LABEL_COL_NAME].value_counts(normalize=True) * 100
+    counts = counts.apply(lambda x: '{:,.2f} %'.format(x))
+    return counts.to_string(header=False)
+
+
 def remove_similar_sequences(input_data, target_data, min_seq_id, chain):
     LOG.info(f"Number of initial rows: {len(input_data)}")
+    LOG.info(f"Initial label counts:\n{_format_label_counts(input_data)}")
 
     unique_input_data = _drop_duplicates(input_data, chain)
     LOG.info(f"Number of duplicate rows removed based on chain {chain}: "
@@ -128,6 +135,7 @@ def remove_similar_sequences(input_data, target_data, min_seq_id, chain):
         output_data = input_data[~input_data.index.isin(ids)]
 
     LOG.info(f"Number of final rows: {len(output_data)}")
+    LOG.info(f"Final label counts:\n{_format_label_counts(input_data)}")
     return output_data
 
 
