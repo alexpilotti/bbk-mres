@@ -14,8 +14,10 @@ CLUSTER_DB_NAME = "cluster_db"
 REP_SEQ_DB_NAME = "rep_seq_db"
 TMP_DIR = "tmp"
 INPUT_FASTA_FILE = "input_data.fasta"
+TARGET_FASTA_FILE = "target_data.fasta"
 OUTPUT_FASTA_FILE = "output_data.fasta"
 CLUSTERS_TSV_FILE = "clusters.tsv"
+M8_FILE = "alignment.m8"
 
 
 def _save_fasta(data, fasta_path, column_name):
@@ -108,21 +110,50 @@ def _drop_duplicates(input_data, chain):
     return input_data.drop_duplicates(subset=subset)
 
 
-def remove_similar_sequences(input_data, min_seq_id, chain):
+def remove_similar_sequences(input_data, target_data, min_seq_id, chain):
     LOG.info(f"Number of initial rows: {len(input_data)}")
 
     unique_input_data = _drop_duplicates(input_data, chain)
     LOG.info(f"Number of duplicate rows removed based on chain {chain}: "
              f"{len(input_data) - len(unique_input_data)}")
 
-    identity_data = _get_cluster_representative_sequences(
-        unique_input_data, min_seq_id, chain)
-
-    output_data = unique_input_data.loc[identity_data.index]
+    if target_data is None:
+        identity_data = _get_cluster_representative_sequences(
+            unique_input_data, min_seq_id, chain)
+        output_data = unique_input_data.loc[identity_data.index]
+    else:
+        alignments = _generate_alignments(input_data, target_data, chain)
+        ids = list(
+            alignments[alignments["fident"] > min_seq_id]["query"].unique())
+        output_data = input_data[~input_data.index.isin(ids)]
 
     LOG.info(f"Number of final rows: {len(output_data)}")
-
     return output_data
+
+
+def _generate_alignments(input_data, target_data, chain):
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        db_dir = os.path.join(tmp_dir, DB_NAME)
+        os.makedirs(db_dir)
+        db_path = os.path.join(db_dir, DB_NAME)
+
+        input_fasta_path = os.path.join(tmp_dir, INPUT_FASTA_FILE)
+        _save_fasta(input_data, input_fasta_path, chain)
+
+        target_fasta_path = os.path.join(tmp_dir, TARGET_FASTA_FILE)
+        _save_fasta(target_data, target_fasta_path, chain)
+
+        mmseq2_wrapper.create_db(target_fasta_path, db_path)
+        mmseq2_wrapper.create_index(db_path, tmp_dir)
+
+        alignment_path = os.path.join(tmp_dir, M8_FILE)
+
+        format_output = ["query", "target", "fident", "alnlen", "evalue"]
+        mmseq2_wrapper.easy_search(db_path, input_fasta_path, alignment_path,
+                                   tmp_dir, format_output)
+
+        return pd.read_csv(alignment_path, sep='\t', header=None,
+                           names=format_output)
 
 
 def read_data(input_path):

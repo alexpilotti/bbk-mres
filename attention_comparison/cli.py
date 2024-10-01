@@ -180,6 +180,11 @@ def _add_remove_similar_sequences_args(parser):
         type=_valid_file_arg,
         help="Sequences data in Apache Parquet format path")
     parser.add_argument(
+        "-t", "--target", required=False,
+        type=_valid_file_arg,
+        help=("Target sequences data (e.g. training set) in Apache Parquet "
+              "format path"))
+    parser.add_argument(
         "-o", "--output", required=True,
         type=pathlib.Path,
         help="Sequences data in Apache Parquet format path")
@@ -302,8 +307,13 @@ def _process_svm_embeddings_prediction_command(args):
 def _process_remove_similar_sequences_command(args):
     input_data = sequence_identity.read_data(args.input)
 
+    if args.target:
+        target_data = sequence_identity.read_data(args.target)
+    else:
+        target_data = None
+
     output_data = sequence_identity.remove_similar_sequences(
-        input_data, args.min_seq_id, args.chain)
+        input_data, target_data, args.min_seq_id, args.chain)
 
     sequence_identity.save_data(output_data, args.output)
 
