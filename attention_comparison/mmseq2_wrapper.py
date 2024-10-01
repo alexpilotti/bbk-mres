@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-INDEX_NAME = "mmseqs2_index"
+ALIGN_SCORE_COV_SEQID = 3
 
 
 def _run_process(args):
@@ -16,16 +16,14 @@ def create_db(fasta_path, seq_db_path):
 def create_index(seq_db_path, tmp_path):
     _run_process(
         ["mmseqs", "createindex", seq_db_path, tmp_path])
-    return os.path.join(os.path.dirname(seq_db_path), INDEX_NAME)
 
 
-def easy_search(target_db_path, index_path, fasta_path, m8_path,
-                alignment_mode, format_output):
+def easy_search(target_db_path, fasta_path, m8_path, tmp_path, format_output,
+                alignment_mode=ALIGN_SCORE_COV_SEQID):
     _run_process(
-        ["mmseqs", "easy-search", "--alignment-mode", alignment_mode,
+        ["mmseqs", "easy-search", "--alignment-mode", str(alignment_mode),
          "--format-output", ",".join(
-             format_output), fasta_path, target_db_path, m8_path,
-         index_path])
+             format_output), fasta_path, target_db_path, m8_path, tmp_path])
 
 
 def cluster(seq_db_path, cluster_db_path, tmp_path, min_seq_id=0.9,
