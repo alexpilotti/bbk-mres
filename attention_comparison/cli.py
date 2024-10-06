@@ -319,7 +319,7 @@ def _process_remove_similar_sequences_command(args):
 
 
 def _setup_logging():
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 
 if __name__ == '__main__':
