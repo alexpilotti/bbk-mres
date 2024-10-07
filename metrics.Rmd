@@ -52,6 +52,7 @@ load_json_files <- function(training) {
     json_data <- data.frame(
       precision = json_data$precision,
       recall = json_data$recall,
+      specificity = json_data$specificity,
       f1 = json_data$f1,
       apr = json_data$apr,
       balanced_accuracy = json_data$balanced_accuracy,
@@ -111,6 +112,10 @@ plot_data <- function(metrics, metric_name) {
 
 ```{r cache = FALSE}
 plot_data(metrics, "precision")
+```
+
+```{r cache = FALSE}
+plot_data(metrics, "specificity")
 ```
 
 ```{r cache = FALSE}

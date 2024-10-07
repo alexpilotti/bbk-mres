@@ -41,6 +41,7 @@ def _compute_metrics(p):
         "balanced_accuracy": metrics.balanced_accuracy_score(labs, preds),
         "auc": metrics.roc_auc_score(labs, probs),
         "mcc": metrics.matthews_corrcoef(labs, preds),
+        "specificity": common.specificity(labs, preds),
     }
 
 

@@ -3,6 +3,7 @@ import os
 import random
 
 import numpy as np
+from sklearn import metrics
 import torch
 
 
@@ -38,3 +39,8 @@ def set_seed(seed: int = _DEFAULT_SEED):
 def save_json_file(data, path, indent=4):
     with open(path, 'w') as f:
         json.dump(data, f, indent=indent)
+
+
+def specificity(y_true, y_pred):
+    tn, fp, _, _ = metrics.confusion_matrix(y_true, y_pred).ravel()
+    return tn / (tn + fp)
