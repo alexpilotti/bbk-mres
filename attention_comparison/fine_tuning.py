@@ -177,6 +177,7 @@ def predict(data, chain, model_name, model_path, use_default_model_tokenizer):
         tokenizer=tokenizer
     )
 
+    model.eval()
     outputs = trainer.predict(ab_dataset_tokenized[common.TEST])
     metrics = _compute_metrics((outputs.predictions, outputs.label_ids))
     probs = torch.softmax(
