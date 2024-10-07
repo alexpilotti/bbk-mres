@@ -172,6 +172,8 @@ def predict(data, chain, model_name, model_path, use_default_model_tokenizer):
     ab_dataset_tokenized = _get_dataset_tokenized(
         data, chain, tokenizer, model_loader)
 
+    common.set_seed(SEED)
+
     trainer = transformers.Trainer(
         model,
         tokenizer=tokenizer
