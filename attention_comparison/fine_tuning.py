@@ -99,6 +99,7 @@ def _get_dataset_tokenized(data, chain, tokenizer, model_loader):
 
 def train(data, chain, model_name, model_path, use_default_model_tokenizer,
           frozen_layers, output_model_path, batch_size, epochs, save_strategy):
+    common.set_seed(SEED)
 
     model_loader = models.get_model_loader(
         model_name, model_path, use_default_model_tokenizer)
@@ -115,8 +116,6 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
 
     ab_dataset_tokenized = _get_dataset_tokenized(
         data, chain, tokenizer, model_loader)
-
-    common.set_seed(SEED)
 
     LOG.info(f"Saving model to {output_model_path}")
     training_args = transformers.TrainingArguments(
@@ -161,6 +160,8 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
 
 
 def predict(data, chain, model_name, model_path, use_default_model_tokenizer):
+    common.set_seed(SEED)
+
     model_loader = models.get_model_loader(
         model_name, model_path, use_default_model_tokenizer)
     model, tokenizer = model_loader.load_model()
@@ -171,8 +172,6 @@ def predict(data, chain, model_name, model_path, use_default_model_tokenizer):
 
     ab_dataset_tokenized = _get_dataset_tokenized(
         data, chain, tokenizer, model_loader)
-
-    common.set_seed(SEED)
 
     trainer = transformers.Trainer(
         model,
