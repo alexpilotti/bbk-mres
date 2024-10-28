@@ -26,7 +26,11 @@ def set_equal_count(input_data):
     return output_data
 
 
-def match_target_data_distribution(input_data, target_data):
+def match_target_data_distribution(input_data, target_data, target_dataset):
+    if target_dataset:
+        target_data = target_data[
+            target_data[common.DATASET_COL_NAME] == target_dataset]
+
     input_data_labels = sorted(input_data[common.LABEL_COL_NAME].unique())
     target_data_labels = sorted(target_data[common.LABEL_COL_NAME].unique())
 

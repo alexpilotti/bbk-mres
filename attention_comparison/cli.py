@@ -211,6 +211,11 @@ def _add_undersample_args(parser):
         help=("Target distribution data (e.g. training set) in Apache Parquet "
               "format path"))
     parser.add_argument(
+        "--target-dataset", required=False,
+        type=str,
+        help=("Filter target data by the provided dataset column value "
+              "(e.g. \"train\")"))
+    parser.add_argument(
         "-o", "--output", required=True,
         type=pathlib.Path,
         help="Sequences data in Apache Parquet format path")
@@ -348,7 +353,7 @@ def _process_undersample_command(args):
         target_data = sequence_identity.read_data(args.target)
 
         output_data = distribution.match_target_data_distribution(
-            input_data, target_data)
+            input_data, target_data, args.target_dataset)
     else:
         output_data = distribution.set_equal_count(input_data)
 
