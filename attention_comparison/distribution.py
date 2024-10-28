@@ -27,6 +27,13 @@ def set_equal_count(input_data):
 
 
 def match_target_data_distribution(input_data, target_data):
+    input_data_labels = sorted(target_data[common.LABEL_COL_NAME].unique())
+    target_data_labels = sorted(target_data[common.LABEL_COL_NAME].unique())
+
+    if input_data_labels != target_data_labels:
+        raise Exception(f"The input labels {input_data_labels} do not match "
+                        f"the target ones {target_data_labels}")
+
     LOG.info(f"Reference counts:\n{common.format_label_counts(target_data)}")
     LOG.info(f"Number of initial rows: {len(input_data)}")
     LOG.info(f"Initial counts:\n{common.format_label_counts(input_data)}")
