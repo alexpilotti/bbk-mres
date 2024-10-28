@@ -11,6 +11,21 @@ def load_data(data_path):
     return pd.read_parquet(data_path)
 
 
+def set_equal_count(input_data):
+    LOG.info(f"Number of initial rows: {len(input_data)}")
+    LOG.info(f"Initial counts:\n{common.format_label_counts(input_data)}")
+
+    min_count = input_data[common.LABEL_COL_NAME].value_counts().min()
+    output_data = input_data.groupby(
+        common.LABEL_COL_NAME, group_keys=False).apply(
+            lambda x: x.sample(
+                min_count,
+                random_state=common.DEFAULT_SEED)).reset_index(drop=True)
+
+    LOG.info(f"Number of final rows: {len(output_data)}")
+    return output_data
+
+
 def match_target_data_distribution(input_data, target_data):
     LOG.info(f"Reference counts:\n{common.format_label_counts(target_data)}")
     LOG.info(f"Number of initial rows: {len(input_data)}")

@@ -206,7 +206,7 @@ def _add_undersample_args(parser):
         type=_valid_file_arg,
         help="Sequences data in Apache Parquet format path")
     parser.add_argument(
-        "-t", "--target", required=True,
+        "-t", "--target", required=False,
         type=_valid_file_arg,
         help=("Target distribution data (e.g. training set) in Apache Parquet "
               "format path"))
@@ -343,10 +343,14 @@ def _process_remove_similar_sequences_command(args):
 
 def _process_undersample_command(args):
     input_data = sequence_identity.read_data(args.input)
-    target_data = sequence_identity.read_data(args.target)
 
-    output_data = distribution.match_target_data_distribution(
-        input_data, target_data)
+    if args.target:
+        target_data = sequence_identity.read_data(args.target)
+
+        output_data = distribution.match_target_data_distribution(
+            input_data, target_data)
+    else:
+        output_data = distribution.set_equal_count(input_data)
 
     sequence_identity.save_data(output_data, args.output)
 
