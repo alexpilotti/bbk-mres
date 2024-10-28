@@ -27,7 +27,7 @@ def set_equal_count(input_data):
 
 
 def match_target_data_distribution(input_data, target_data):
-    input_data_labels = sorted(target_data[common.LABEL_COL_NAME].unique())
+    input_data_labels = sorted(input_data[common.LABEL_COL_NAME].unique())
     target_data_labels = sorted(target_data[common.LABEL_COL_NAME].unique())
 
     if input_data_labels != target_data_labels:
