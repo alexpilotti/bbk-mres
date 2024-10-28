@@ -6,6 +6,7 @@ import sys
 import attention_weights
 import common
 import data_splitting
+import distribution
 import embeddings
 import fine_tuning
 import models
@@ -21,6 +22,7 @@ CMD_PREDICT = "predict"
 CMD_REMOVE_SIMILAR_SEQUENCES = "remove-similar-sequences"
 CMD_SPLIT_DATA = "split-data"
 CMD_SVM_EMBEDDINGS_PREDICTION = "svm-embeddings-prediction"
+CMD_UNDERSAMPLE = "undersample"
 
 DEFAULT_MIN_SEQ_ID = 0.9
 
@@ -198,6 +200,22 @@ def _add_remove_similar_sequences_args(parser):
         help="Mininum sequence identity")
 
 
+def _add_undersample_args(parser):
+    parser.add_argument(
+        "-i", "--input", required=True,
+        type=_valid_file_arg,
+        help="Sequences data in Apache Parquet format path")
+    parser.add_argument(
+        "-t", "--target", required=True,
+        type=_valid_file_arg,
+        help=("Target distribution data (e.g. training set) in Apache Parquet "
+              "format path"))
+    parser.add_argument(
+        "-o", "--output", required=True,
+        type=pathlib.Path,
+        help="Sequences data in Apache Parquet format path")
+
+
 def _parse_args():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(
@@ -241,6 +259,11 @@ def _parse_args():
         CMD_REMOVE_SIMILAR_SEQUENCES, help="Remove similar sequences",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     _add_remove_similar_sequences_args(remove_similar_sequences_parser)
+
+    undersample_parser = subparsers.add_parser(
+        CMD_UNDERSAMPLE, help="Undersample",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    _add_undersample_args(undersample_parser)
 
     # If no arguments are provided, print help
     if len(sys.argv) == 1:
@@ -318,6 +341,16 @@ def _process_remove_similar_sequences_command(args):
     sequence_identity.save_data(output_data, args.output)
 
 
+def _process_undersample_command(args):
+    input_data = sequence_identity.read_data(args.input)
+    target_data = sequence_identity.read_data(args.target)
+
+    output_data = distribution.match_target_data_distribution(
+        input_data, target_data)
+
+    sequence_identity.save_data(output_data, args.output)
+
+
 def _setup_logging():
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
@@ -343,3 +376,5 @@ if __name__ == '__main__':
         _process_split_data_command(args)
     elif args.command == CMD_SVM_EMBEDDINGS_PREDICTION:
         _process_svm_embeddings_prediction_command(args)
+    elif args.command == CMD_UNDERSAMPLE:
+        _process_undersample_command(args)
