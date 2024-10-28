@@ -135,7 +135,7 @@ def remove_similar_sequences(input_data, target_data, min_seq_id, chain):
         output_data = input_data[~input_data.index.isin(ids)]
 
     LOG.info(f"Number of final rows: {len(output_data)}")
-    LOG.info(f"Final label counts:\n{_format_label_counts(input_data)}")
+    LOG.info(f"Final label counts:\n{_format_label_counts(output_data)}")
     return output_data
 
 
