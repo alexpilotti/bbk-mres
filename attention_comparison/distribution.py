@@ -51,7 +51,7 @@ def match_target_data_distribution(input_data, target_data):
     adj_data_counts = (data_counts * scale_factor).astype(int)
 
     output_data = input_data.groupby(common.LABEL_COL_NAME).apply(
-        lambda x: x.sample(adj_data_counts[x.name],
+        lambda x: x.sample(adj_data_counts.loc[x.name],
                            random_state=common.DEFAULT_SEED)).reset_index(
                                drop=True)
 
