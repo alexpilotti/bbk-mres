@@ -17,7 +17,7 @@ def _load_data(data_path, embeddings_path, positive_labels):
     y = pd.read_parquet(data_path)
     X = torch.load(embeddings_path, map_location=torch.device('cpu')).numpy()
     y_groups = y.subject.values
-    y = np.isin(y.label.values, positive_labels).astype(int)
+    y = np.isin(y.label.values.astype(str), positive_labels).astype(int)
     assert X.shape[0] == len(y)
     return X, y, y_groups
 

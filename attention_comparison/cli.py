@@ -167,8 +167,8 @@ def _add_svm_embeddings_prediction_args(parser):
         type=pathlib.Path,
         help="Path of the CSV output file that will contain the score")
     parser.add_argument(
-        "-l", "--positive-labels", required=True,
-        nargs='+', type=str,
+        "-l", "--positive-labels", required=False,
+        nargs='+', type=str, default=["1"],
         help="List of positive labels")
     parser.add_argument(
         '--shuffle', required=False,
