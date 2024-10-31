@@ -188,6 +188,7 @@ def predict(data, chain, model_name, model_path, use_default_model_tokenizer):
 
     metrics['model_name'] = model_name
     metrics['model_path'] = model_path
+    metrics['num_parameters'] = sum(p.numel() for p in model.parameters())
     metrics['test_loss'] = outputs.metrics['test_loss']
 
     return probs, metrics
