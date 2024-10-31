@@ -52,7 +52,7 @@ def get_attention_weights(model_name, model_path, use_default_model_tokenizer,
     LOG.info(f"Using device: {device}")
     model = model.to(device)
 
-    attentions = None
+    attentions = []
 
     for sequence_index, sequence in enumerate(sequences, 1):
         LOG.info(f"Sequence {sequence_index} out of {len(sequences)}")
@@ -142,12 +142,9 @@ def get_attention_weights(model_name, model_path, use_default_model_tokenizer,
                      'Seq_1', 'Seq_2'],
                     inplace=True)
 
-                if attentions is None:
-                    attentions = df
-                else:
-                    attentions = pd.concat([attentions, df])
+                attentions.append(df)
 
-    return attentions
+    return pd.concat(attentions)
 
 
 def save_attentions(attentions, output_path):
