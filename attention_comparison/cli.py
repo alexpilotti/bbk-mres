@@ -133,11 +133,17 @@ def _add_attentions_args(parser):
         choices=numbering.SCHEME_NAMES,
         default=numbering.SCHEME_IMGT,
         help="The sequence numbering scheme to use")
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
         "-s", "--sequence-indexes", required=False,
         nargs='+', type=int,
         help="Indexes of the sequences in the data file. Accepts multiple "
         "values")
+    group.add_argument(
+        "--max-sequences", required=False,
+        type=int,
+        help="Use only up to the first maximum number of sequences in the "
+        "data file")
 
 
 def _add_embeddings_args(parser):
@@ -304,7 +310,7 @@ def _process_predict_command(args):
 
 def _process_attentions_command(args):
     sequences = attention_weights.get_sequences(
-        args.input, args.chain, args.sequence_indexes)
+        args.input, args.chain, args.sequence_indexes, args.max_sequences)
 
     sequences = numbering.get_adjusted_sequence_numbering(
         sequences, args.scheme)
