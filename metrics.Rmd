@@ -60,6 +60,7 @@ load_json_files <- function(training) {
       mcc = json_data$mcc,
       test_loss = json_data$test_loss,
       model = model_name,
+      num_parameters = json_data$num_parameters,
       training = training
     )
 
@@ -78,7 +79,8 @@ plot_data <- function(metrics, metric_name) {
   binwidth_value <- data_range / 30
   y_label = tools::toTitleCase(metric_name)
 
-  p <- ggplot(metrics, aes(x = model, y = .data[[metric_name]], fill = training)) +
+  p <- ggplot(metrics, aes(x = reorder(model, num_parameters),
+                           y = .data[[metric_name]], fill = training)) +
     geom_dotplot(
       binaxis = 'y',
       stackdir = 'center',
