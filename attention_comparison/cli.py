@@ -417,7 +417,7 @@ if __name__ == '__main__':
         _process_remove_similar_sequences_command(args)
     elif args.command == CMD_SHUFFLE:
         _process_shuffle_command(args)
-    if args.command == CMD_SPLIT_DATA:
+    elif args.command == CMD_SPLIT_DATA:
         _process_split_data_command(args)
     elif args.command == CMD_SVM_EMBEDDINGS_PREDICTION:
         _process_svm_embeddings_prediction_command(args)
