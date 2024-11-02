@@ -35,7 +35,7 @@ def _compute_metrics(preds, probs, labs):
 
 
 def compute_prediction(data_path, embeddings_path, output_path,
-                       positive_labels, shuffle=False, random_state=9):
+                       positive_labels, random_state=9):
 
     X, y, y_groups = _load_data(data_path, embeddings_path, positive_labels)
     y_group_counts = collections.Counter(y_groups)
@@ -44,10 +44,6 @@ def compute_prediction(data_path, embeddings_path, output_path,
     LOG.info(f"In total, {len(y)} sequences from {len(np.unique(y_groups))} "
              f"donors/studies.")
     LOG.info(f"Class size: {collections.Counter(np.sort(y)).most_common()}")
-
-    if shuffle:
-        LOG.info(f"Shuffling the embedding...")
-        y = y[np.random.permutation(len(y))]
 
     n_splits_outer = 4
     n_splits_inner = 3

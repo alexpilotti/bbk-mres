@@ -193,10 +193,6 @@ def _add_svm_embeddings_prediction_args(parser):
         "-l", "--positive-labels", required=False,
         nargs='+', type=str, default=["1"],
         help="List of positive labels")
-    parser.add_argument(
-        '--shuffle', required=False,
-        action='store_true',
-        help="Shuffle the embedding labels")
 
 
 def _add_remove_similar_sequences_args(parser):
@@ -356,8 +352,7 @@ def _process_embeddings_command(args):
 
 def _process_svm_embeddings_prediction_command(args):
     svm_embeddings_prediction.compute_prediction(
-        args.input, args.embeddings, args.output, args.positive_labels,
-        args.shuffle)
+        args.input, args.embeddings, args.output, args.positive_labels)
 
 
 def _process_remove_similar_sequences_command(args):
