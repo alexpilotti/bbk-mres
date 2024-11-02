@@ -12,6 +12,7 @@ import fine_tuning
 import models
 import numbering
 import sequence_identity
+import shuffle
 import svm_embeddings_prediction
 
 
@@ -20,6 +21,7 @@ CMD_EMBEDDINGS = "embeddings"
 CMD_FINE_TUNING = "fine-tuning"
 CMD_PREDICT = "predict"
 CMD_REMOVE_SIMILAR_SEQUENCES = "remove-similar-sequences"
+CMD_SHUFFLE = "shuffle"
 CMD_SPLIT_DATA = "split-data"
 CMD_SVM_EMBEDDINGS_PREDICTION = "svm-embeddings-prediction"
 CMD_UNDERSAMPLE = "undersample"
@@ -66,6 +68,21 @@ def _add_common_args(parser):
         "-c", "--chain", required=True,
         choices=common.CHAIN_TYPES,
         help="The antibody chain(s), can be H, L, HL")
+
+
+def _add_shuffle_data_args(parser):
+    parser.add_argument(
+        "-i", "--input", required=True,
+        type=_valid_file_arg,
+        help="Data in Apache Parquet format path")
+    parser.add_argument(
+        "-c", "--column", required=False,
+        type=str, default=common.LABEL_COL_NAME,
+        help="Name of the column to shuffle")
+    parser.add_argument(
+        "-o", "--output", required=True,
+        type=pathlib.Path,
+        help="Path of the output file that will contain the shuffled data")
 
 
 def _add_split_data_args(parser):
@@ -276,6 +293,11 @@ def _parse_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     _add_undersample_args(undersample_parser)
 
+    shuffle_parser = subparsers.add_parser(
+        CMD_SHUFFLE, help="Shuffle",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    _add_shuffle_data_args(shuffle_parser)
+
     # If no arguments are provided, print help
     if len(sys.argv) == 1:
         parser.print_help()
@@ -366,6 +388,12 @@ def _process_undersample_command(args):
     sequence_identity.save_data(output_data, args.output)
 
 
+def _process_shuffle_command(args):
+    input_data = shuffle.load_data(args.input)
+    output_data = shuffle.shuffle_column_values(input_data, args.column)
+    shuffle.save_data(output_data, args.output)
+
+
 def _setup_logging():
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
@@ -387,6 +415,8 @@ if __name__ == '__main__':
         _process_predict_command(args)
     elif args.command == CMD_REMOVE_SIMILAR_SEQUENCES:
         _process_remove_similar_sequences_command(args)
+    elif args.command == CMD_SHUFFLE:
+        _process_shuffle_command(args)
     if args.command == CMD_SPLIT_DATA:
         _process_split_data_command(args)
     elif args.command == CMD_SVM_EMBEDDINGS_PREDICTION:
