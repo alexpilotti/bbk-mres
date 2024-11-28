@@ -103,7 +103,7 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
 
     model_loader = models.get_model_loader(
         model_name, model_path, use_default_model_tokenizer)
-    model, tokenizer = model_loader.load_model()
+    model, tokenizer = model_loader.load_model_for_sequence_classification()
 
     device = common.get_best_device()
     LOG.info(f"Using device: {device}")
@@ -164,7 +164,7 @@ def predict(data, chain, model_name, model_path, use_default_model_tokenizer):
 
     model_loader = models.get_model_loader(
         model_name, model_path, use_default_model_tokenizer)
-    model, tokenizer = model_loader.load_model()
+    model, tokenizer = model_loader.load_model_for_sequence_classification()
 
     device = common.get_best_device()
     LOG.info(f"Using device: {device}")

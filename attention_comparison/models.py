@@ -77,7 +77,7 @@ class BaseModelLoader(metaclass=abc.ABCMeta):
             model_name, model_path, use_default_model_tokenizer)
         self._cls_token = None
 
-    def load_model(self):
+    def load_model_for_sequence_classification(self):
         tokenizer = transformers.AutoTokenizer.from_pretrained(
             self._tokenizer_path)
         self._cls_token = tokenizer.cls_token
@@ -199,7 +199,7 @@ class AntiBERTyModelLoader(BaseBERTModelLoader):
                 models_base_dir, "AntiBERTy_md_smooth")
             self._vocab_txt_path = os.path.join(models_base_dir, "vocab.txt")
 
-    def load_model(self):
+    def load_model_for_sequence_classification(self):
         tokenizer = transformers.BertTokenizer(
             vocab_file=self._vocab_txt_path, do_lower_case=False)
         self._cls_token = tokenizer.cls_token
@@ -208,7 +208,7 @@ class AntiBERTyModelLoader(BaseBERTModelLoader):
         return model, tokenizer
 
     def load_model_for_embeddings(self):
-        return self.load_model()
+        return self.load_model_for_sequence_classification()
 
     def get_max_length(self):
         return _ANTIBERTY_MAX_LENGTH
