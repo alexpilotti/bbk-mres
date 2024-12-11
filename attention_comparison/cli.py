@@ -8,7 +8,7 @@ import common
 import data_splitting
 import distribution
 import embeddings
-import fine_tuning
+import seq_classification_fine_tuning as seq_class_ft
 import models
 import numbering
 import sequence_identity
@@ -115,16 +115,16 @@ def _add_fine_tuning_args(parser):
         help="The model layers to freeze")
     parser.add_argument(
         "-b", "--batch_size", required=False,
-        type=int, default=fine_tuning.DEFAULT_BATCH_SIZE,
+        type=int, default=seq_class_ft.DEFAULT_BATCH_SIZE,
         help="Batch size")
     parser.add_argument(
         "-e", "--epochs", required=False,
-        type=int, default=fine_tuning.DEFAULT_EPOCHS,
+        type=int, default=seq_class_ft.DEFAULT_EPOCHS,
         help="Number of training epochs")
     parser.add_argument(
         "-s", "--save-strategy", required=False,
-        choices=fine_tuning.SAVE_STRATEGIES,
-        default=fine_tuning.DEFAULT_SAVE_STRATEGY,
+        choices=seq_class_ft.SAVE_STRATEGIES,
+        default=seq_class_ft.DEFAULT_SAVE_STRATEGY,
         help="The model save strategy")
 
 
@@ -311,18 +311,18 @@ def _process_split_data_command(args):
 
 
 def _process_fine_tuning_command(args):
-    data = fine_tuning.load_data(args.input)
-    fine_tuning.train(data, args.chain, args.model, args.model_path,
-                      args.use_default_model_tokenizer, args.frozen_layers,
-                      args.output, args.batch_size, args.epochs,
-                      args.save_strategy)
+    data = seq_class_ft.load_data(args.input)
+    seq_class_ft.train(data, args.chain, args.model, args.model_path,
+                       args.use_default_model_tokenizer, args.frozen_layers,
+                       args.output, args.batch_size, args.epochs,
+                       args.save_strategy)
 
 
 def _process_predict_command(args):
-    data = fine_tuning.load_data(args.input)
-    _, metrics = fine_tuning.predict(data, args.chain, args.model,
-                                     args.model_path,
-                                     args.use_default_model_tokenizer)
+    data = seq_class_ft.load_data(args.input)
+    _, metrics = seq_class_ft.predict(data, args.chain, args.model,
+                                      args.model_path,
+                                      args.use_default_model_tokenizer)
     common.save_json_file(metrics, args.output)
 
 
