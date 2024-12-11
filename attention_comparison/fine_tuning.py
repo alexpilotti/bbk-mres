@@ -22,7 +22,6 @@ DEFAULT_EPOCHS = 30
 DEFAULT_SAVE_STRATEGY = transformers.IntervalStrategy.NO
 
 LR = 1e-5
-SEED = 42
 
 
 def _compute_metrics(p):
@@ -99,7 +98,7 @@ def _get_dataset_tokenized(data, chain, tokenizer, model_loader):
 
 def train(data, chain, model_name, model_path, use_default_model_tokenizer,
           frozen_layers, output_model_path, batch_size, epochs, save_strategy):
-    common.set_seed(SEED)
+    common.set_seed()
 
     model_loader = models.get_model_loader(
         model_name, model_path, use_default_model_tokenizer)
@@ -131,7 +130,7 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
         load_best_model_at_end=True,
         metric_for_best_model="auc",
         lr_scheduler_type='linear',
-        seed=SEED
+        seed=common.DEFAULT_SEED
     )
 
     trainer = transformers.Trainer(
@@ -160,7 +159,7 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
 
 
 def predict(data, chain, model_name, model_path, use_default_model_tokenizer):
-    common.set_seed(SEED)
+    common.set_seed()
 
     model_loader = models.get_model_loader(
         model_name, model_path, use_default_model_tokenizer)
