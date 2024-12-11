@@ -19,7 +19,7 @@ import svm_embeddings_prediction
 CMD_ATTENTIONS = "attentions"
 CMD_EMBEDDINGS = "embeddings"
 CMD_SEQ_FINE_TUNING = "seq-fine-tuning"
-CMD_PREDICT = "predict"
+CMD_SEQ_PREDICT = "seq-prediction"
 CMD_REMOVE_SIMILAR_SEQUENCES = "remove-similar-sequences"
 CMD_SHUFFLE = "shuffle"
 CMD_SPLIT_DATA = "split-data"
@@ -128,7 +128,7 @@ def _add_fine_tuning_args(parser):
         help="The model save strategy")
 
 
-def _add_predict_args(parser):
+def _add_seq_predict_args(parser):
     parser.add_argument(
         "-o", "--output", required=True,
         type=pathlib.Path,
@@ -256,11 +256,11 @@ def _parse_args():
     _add_common_args(seq_fine_tuning_parser)
     _add_fine_tuning_args(seq_fine_tuning_parser)
 
-    predict_parser = subparsers.add_parser(
-        CMD_PREDICT, help="Predict",
+    seq_predict_parser = subparsers.add_parser(
+        CMD_SEQ_PREDICT, help="Sequence classification prediction",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    _add_common_args(predict_parser)
-    _add_predict_args(predict_parser)
+    _add_common_args(seq_predict_parser)
+    _add_seq_predict_args(seq_predict_parser)
 
     attentions_parser = subparsers.add_parser(
         CMD_ATTENTIONS, help="Get attentions",
@@ -318,7 +318,7 @@ def _process_seq_fine_tuning_command(args):
                        args.save_strategy)
 
 
-def _process_predict_command(args):
+def _process_seq_predict_command(args):
     data = seq_class_ft.load_data(args.input)
     _, metrics = seq_class_ft.predict(data, args.chain, args.model,
                                       args.model_path,
@@ -406,8 +406,8 @@ if __name__ == '__main__':
         _process_embeddings_command(args)
     elif args.command == CMD_SEQ_FINE_TUNING:
         _process_seq_fine_tuning_command(args)
-    elif args.command == CMD_PREDICT:
-        _process_predict_command(args)
+    elif args.command == CMD_SEQ_PREDICT:
+        _process_seq_predict_command(args)
     elif args.command == CMD_REMOVE_SIMILAR_SEQUENCES:
         _process_remove_similar_sequences_command(args)
     elif args.command == CMD_SHUFFLE:
