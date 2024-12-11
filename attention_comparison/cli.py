@@ -22,6 +22,7 @@ CMD_EMBEDDINGS = "embeddings"
 CMD_SEQ_FINE_TUNING = "seq-fine-tuning"
 CMD_SEQ_PREDICT = "seq-prediction"
 CMD_TOKEN_FINE_TUNING = "token-fine-tuning"
+CMD_TOKEN_PREDICT = "token-prediction"
 CMD_REMOVE_SIMILAR_SEQUENCES = "remove-similar-sequences"
 CMD_SHUFFLE = "shuffle"
 CMD_SPLIT_DATA = "split-data"
@@ -135,6 +136,17 @@ def _add_seq_predict_args(parser):
         "-o", "--output", required=True,
         type=pathlib.Path,
         help="Path of the file containing the prediction metrics")
+
+
+def _add_token_predict_args(parser):
+    parser.add_argument(
+        "-o", "--output", required=True,
+        type=pathlib.Path,
+        help="Path of the file containing the prediction metrics")
+    parser.add_argument(
+        "-P", "--prediction", required=True,
+        type=pathlib.Path,
+        help="Path of the file containing the predicted labels")
 
 
 def _add_attentions_args(parser):
@@ -270,6 +282,12 @@ def _parse_args():
     _add_common_args(seq_predict_parser)
     _add_seq_predict_args(seq_predict_parser)
 
+    token_predict_parser = subparsers.add_parser(
+        CMD_TOKEN_PREDICT, help="Token classification prediction",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    _add_common_args(token_predict_parser)
+    _add_token_predict_args(token_predict_parser)
+
     attentions_parser = subparsers.add_parser(
         CMD_ATTENTIONS, help="Get attentions",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -339,6 +357,15 @@ def _process_seq_predict_command(args):
     _, metrics = seq_class_ft.predict(data, args.chain, args.model,
                                       args.model_path,
                                       args.use_default_model_tokenizer)
+    common.save_json_file(metrics, args.output)
+
+
+def _process_token_predict_command(args):
+    data = token_class_ft.load_data(args.input)
+    data, metrics = token_class_ft.predict(data, args.chain, args.model,
+                                           args.model_path,
+                                           args.use_default_model_tokenizer)
+    data.to_parquet(args.prediction)
     common.save_json_file(metrics, args.output)
 
 
@@ -426,6 +453,8 @@ if __name__ == '__main__':
         _process_token_fine_tuning_command(args)
     elif args.command == CMD_SEQ_PREDICT:
         _process_seq_predict_command(args)
+    elif args.command == CMD_TOKEN_PREDICT:
+        _process_token_predict_command(args)
     elif args.command == CMD_REMOVE_SIMILAR_SEQUENCES:
         _process_remove_similar_sequences_command(args)
     elif args.command == CMD_SHUFFLE:
