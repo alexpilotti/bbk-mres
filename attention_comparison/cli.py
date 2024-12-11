@@ -8,9 +8,9 @@ import common
 import data_splitting
 import distribution
 import embeddings
-import seq_classification_fine_tuning as seq_class_ft
 import models
 import numbering
+import seq_classification_fine_tuning as seq_class_ft
 import sequence_identity
 import shuffle
 import svm_embeddings_prediction
@@ -18,7 +18,7 @@ import svm_embeddings_prediction
 
 CMD_ATTENTIONS = "attentions"
 CMD_EMBEDDINGS = "embeddings"
-CMD_FINE_TUNING = "fine-tuning"
+CMD_SEQ_FINE_TUNING = "seq-fine-tuning"
 CMD_PREDICT = "predict"
 CMD_REMOVE_SIMILAR_SEQUENCES = "remove-similar-sequences"
 CMD_SHUFFLE = "shuffle"
@@ -250,11 +250,11 @@ def _parse_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     _add_split_data_args(split_data_parser)
 
-    fine_tuning_parser = subparsers.add_parser(
-        CMD_FINE_TUNING, help="Fine tuning",
+    seq_fine_tuning_parser = subparsers.add_parser(
+        CMD_SEQ_FINE_TUNING, help="Sequence classification fine tuning",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    _add_common_args(fine_tuning_parser)
-    _add_fine_tuning_args(fine_tuning_parser)
+    _add_common_args(seq_fine_tuning_parser)
+    _add_fine_tuning_args(seq_fine_tuning_parser)
 
     predict_parser = subparsers.add_parser(
         CMD_PREDICT, help="Predict",
@@ -310,7 +310,7 @@ def _process_split_data_command(args):
     data_splitting.save_data(data, args.output)
 
 
-def _process_fine_tuning_command(args):
+def _process_seq_fine_tuning_command(args):
     data = seq_class_ft.load_data(args.input)
     seq_class_ft.train(data, args.chain, args.model, args.model_path,
                        args.use_default_model_tokenizer, args.frozen_layers,
@@ -404,8 +404,8 @@ if __name__ == '__main__':
         _process_attentions_command(args)
     elif args.command == CMD_EMBEDDINGS:
         _process_embeddings_command(args)
-    elif args.command == CMD_FINE_TUNING:
-        _process_fine_tuning_command(args)
+    elif args.command == CMD_SEQ_FINE_TUNING:
+        _process_seq_fine_tuning_command(args)
     elif args.command == CMD_PREDICT:
         _process_predict_command(args)
     elif args.command == CMD_REMOVE_SIMILAR_SEQUENCES:
