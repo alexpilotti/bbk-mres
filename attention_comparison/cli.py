@@ -14,12 +14,14 @@ import seq_classification_fine_tuning as seq_class_ft
 import sequence_identity
 import shuffle
 import svm_embeddings_prediction
+import token_classification_fine_tuning as token_class_ft
 
 
 CMD_ATTENTIONS = "attentions"
 CMD_EMBEDDINGS = "embeddings"
 CMD_SEQ_FINE_TUNING = "seq-fine-tuning"
 CMD_SEQ_PREDICT = "seq-prediction"
+CMD_TOKEN_FINE_TUNING = "token-fine-tuning"
 CMD_REMOVE_SIMILAR_SEQUENCES = "remove-similar-sequences"
 CMD_SHUFFLE = "shuffle"
 CMD_SPLIT_DATA = "split-data"
@@ -256,6 +258,12 @@ def _parse_args():
     _add_common_args(seq_fine_tuning_parser)
     _add_fine_tuning_args(seq_fine_tuning_parser)
 
+    token_fine_tuning_parser = subparsers.add_parser(
+        CMD_TOKEN_FINE_TUNING, help="Token classification fine tuning",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    _add_common_args(token_fine_tuning_parser)
+    _add_fine_tuning_args(token_fine_tuning_parser)
+
     seq_predict_parser = subparsers.add_parser(
         CMD_SEQ_PREDICT, help="Sequence classification prediction",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -316,6 +324,14 @@ def _process_seq_fine_tuning_command(args):
                        args.use_default_model_tokenizer, args.frozen_layers,
                        args.output, args.batch_size, args.epochs,
                        args.save_strategy)
+
+
+def _process_token_fine_tuning_command(args):
+    data = token_class_ft.load_data(args.input)
+    token_class_ft.train(data, args.chain, args.model, args.model_path,
+                         args.use_default_model_tokenizer, args.frozen_layers,
+                         args.output, args.batch_size, args.epochs,
+                         args.save_strategy)
 
 
 def _process_seq_predict_command(args):
@@ -406,6 +422,8 @@ if __name__ == '__main__':
         _process_embeddings_command(args)
     elif args.command == CMD_SEQ_FINE_TUNING:
         _process_seq_fine_tuning_command(args)
+    elif args.command == CMD_TOKEN_FINE_TUNING:
+        _process_token_fine_tuning_command(args)
     elif args.command == CMD_SEQ_PREDICT:
         _process_seq_predict_command(args)
     elif args.command == CMD_REMOVE_SIMILAR_SEQUENCES:
