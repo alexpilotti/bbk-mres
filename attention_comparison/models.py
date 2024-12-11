@@ -85,6 +85,14 @@ class BaseModelLoader(metaclass=abc.ABCMeta):
             from_pretrained(self._model_path, num_labels=2)
         return model, tokenizer
 
+    def load_model_for_token_classification(self, num_labels=2):
+        tokenizer = transformers.AutoTokenizer.from_pretrained(
+            self._tokenizer_path)
+        self._cls_token = tokenizer.cls_token
+        model = transformers.AutoModelForTokenClassification.\
+            from_pretrained(self._model_path, num_labels=num_labels)
+        return model, tokenizer
+
     def load_model_for_embeddings(self):
         tokenizer = transformers.AutoTokenizer.from_pretrained(
             self._tokenizer_path)
@@ -207,6 +215,14 @@ class AntiBERTyModelLoader(BaseBERTModelLoader):
             from_pretrained(self._model_path, num_labels=2)
         return model, tokenizer
 
+    def load_model_for_token_classification(self, num_labels=2):
+        tokenizer = transformers.BertTokenizer(
+            vocab_file=self._vocab_txt_path, do_lower_case=False)
+        self._cls_token = tokenizer.cls_token
+        model = transformers.AutoModelForTokenClassification.\
+            from_pretrained(self._model_path, num_labels=num_labels)
+        return model, tokenizer
+
     def load_model_for_embeddings(self):
         return self.load_model_for_sequence_classification()
 
@@ -238,6 +254,14 @@ class BALMPairedModelLoader(BaseModelLoader):
             self._tokenizer_path)
         self._cls_token = tokenizer.cls_token
         model = transformers.RobertaForMaskedLM.from_pretrained(
+            self._model_path)
+        return model, tokenizer
+
+    def load_model_for_token_classification(self, num_labels=2):
+        tokenizer = transformers.RobertaTokenizer.from_pretrained(
+            self._tokenizer_path)
+        self._cls_token = tokenizer.cls_token
+        model = transformers.RobertaForTokenClassification.from_pretrained(
             self._model_path)
         return model, tokenizer
 
