@@ -1,0 +1,218 @@
+---
+title: "Token prediction"
+output:
+  html_document: default
+  pdf_document: default
+params:
+  chain: "H"
+  data_path: !r file.path(getwd(), "data")
+---
+```{r setup, warning = FALSE, message = FALSE, cache = FALSE}
+if(!require("ggplot2")){
+  install.packages("ggplot2")
+}
+library(ggplot2)
+
+if(!require("dplyr")) {
+  install.packages("dplyr")
+}
+library(dplyr)
+
+if(!require("arrow")) {
+  install.packages("arrow")
+}
+library(arrow)
+
+if(!require("gridExtra")) {
+  install.packages("gridExtra")
+}
+library(gridExtra)
+
+if(!require("glue")) {
+  install.packages("glue")
+}
+library(glue)
+
+# For mixedsort()
+if(!require("gtools")) {
+  install.packages("gtools")
+}
+
+if(!require("tidyr")) {
+  install.packages("tidyr")
+}
+library(tidyr)
+
+knitr::opts_chunk$set(fig.width=10, fig.height=12)
+```
+
+```{r plot_token_prediction, cache = FALSE}
+plot_token_prediction <- function(model_name, is_ft) {
+  chain <- params$chain
+  data_path <- params$data_path
+
+  ft_pt <- if (is_ft) "FT" else "PT"
+  token_pred_data_path <- file.path(
+    data_path, glue("token_prediction_{model_name}_{ft_pt}.parquet"))
+  data <- read_parquet(token_pred_data_path)
+
+  df <- data[, (names(data) %in%
+             c("iden_code", "positions_H", "labels", "predicted_labels"))]
+
+  pivoted_df <- df %>%
+    separate_rows(positions_H, labels, predicted_labels, sep = ",") %>%
+    mutate(labels = as.integer(labels),
+           predicted_labels = as.integer(predicted_labels))
+
+  aggregated_df <- pivoted_df %>%
+    group_by(iden_code, positions_H) %>%
+    summarise(
+      labels = sum(labels, na.rm = TRUE),
+      predicted_labels = sum(predicted_labels, na.rm = TRUE),
+      .groups = 'drop'
+    )
+
+
+  # Fill in missing values
+  aggregated_df <- tidyr::complete(
+    aggregated_df,
+    positions_H = unique(aggregated_df$positions_H),
+    iden_code = unique(aggregated_df$iden_code)
+  )
+
+  aggregated_df$color_pred_labels <- NULL
+
+  aggregated_df$color_pred_labels <- ifelse(
+    is.na(aggregated_df$predicted_labels),
+    "missing",
+    ifelse(
+      aggregated_df$predicted_labels > 0 ,
+      "binding",
+      ifelse(
+        aggregated_df$predicted_labels == 0 &
+          aggregated_df$labels != -100,
+        "non-binding",
+        "missing"
+      )
+    )
+  )
+
+  aggregated_df$color_labels <- case_when(
+    aggregated_df$labels > 0 ~ "binding",
+    aggregated_df$labels == 0 ~ "non-binding",
+    aggregated_df$labels < 0 ~ "missing",
+    is.na(aggregated_df$labels) ~ "missing",
+  )
+
+  # Sort legend values
+  aggregated_df$color_labels <- factor(
+    aggregated_df$color_labels, levels = c("binding", "non-binding", "missing"))
+  aggregated_df$color_pred_labels <- factor(
+    aggregated_df$color_pred_labels, levels = c(
+      "binding", "non-binding", "missing"))
+
+  # Sort positions by number followed by iCode
+  aggregated_df$positions_H <- factor(
+    aggregated_df$positions_H, levels = mixedsort(
+      unique(aggregated_df$positions_H)))
+
+  position_breaks <- levels(aggregated_df$positions_H)[
+    grepl("[A-Z]$", levels(aggregated_df$positions_H)) |
+      (suppressWarnings(as.numeric(levels(
+        aggregated_df$positions_H)) %% 5 == 0)) |
+      (suppressWarnings(as.numeric(levels(aggregated_df$positions_H)) == 1))]
+
+  position_labels <- sapply(levels(aggregated_df$positions_H), function(x)
+    if (x %in% position_breaks)
+      x
+    else
+      "")
+
+  p1 <- ggplot(aggregated_df,
+               aes(x = positions_H, y = iden_code, fill = color_labels)) +
+    geom_tile() +
+    scale_fill_manual(values = c(
+      "binding" = "#ffbe4f",
+      "non-binding" = "#0ea7b5",
+      "missing" = "#6bd2db"
+    )) +
+    labs(
+      title = glue("Labels - {model_name}"),
+      x = glue("Chain: {chain}"),
+      y = "Sequences",
+      fill = "Color"
+    ) +
+    scale_x_discrete(
+      labels = position_labels, guide = guide_axis(n.dodge = 2)) +
+    theme(
+      plot.title = element_text(hjust = 0.5),
+      axis.text.y = element_blank(),
+      axis.ticks.y = element_blank(),
+      axis.text.x = element_text(
+        angle = 90,
+        hjust = 1,
+        vjust = 0.5,
+        size = 5
+      )
+    )
+
+  p2 <- ggplot(aggregated_df,
+               aes(x = positions_H, y = iden_code, fill = color_pred_labels)) +
+    geom_tile() +
+    scale_fill_manual(values = c(
+      "binding" = "#ffbe4f",
+      "non-binding" = "#0ea7b5",
+      "missing" = "#6bd2db"
+    )) +
+    labs(
+      title = glue("Predicted labels - {model_name}"),
+      x = glue("Chain: {chain}"),
+      y = "Sequences",
+      fill = "Color"
+    ) +
+    scale_x_discrete(
+      labels = position_labels, guide = guide_axis(n.dodge = 2)) +
+    theme(
+      plot.title = element_text(hjust = 0.5),
+      axis.text.y = element_blank(),
+      axis.ticks.y = element_blank(),
+      axis.text.x = element_text(
+        angle = 90,
+        hjust = 1,
+        vjust = 0.5,
+        size = 5
+      )
+    )
+
+  grid.arrange(p1, p2, nrow = 2)
+}
+```
+
+```{r AntiBERTa2, cache = FALSE}
+plot_token_prediction("AntiBERTa2", TRUE)
+```
+```{r AntiBERTy, cache = FALSE}
+plot_token_prediction("AntiBERTy", TRUE)
+```
+```{r BALM-paired, cache = FALSE}
+plot_token_prediction("BALM-paired", TRUE)
+```
+
+```{r ESM2-8M, cache = FALSE}
+plot_token_prediction("ESM2-8M", TRUE)
+```
+
+```{r ESM2-35M, cache = FALSE}
+plot_token_prediction("ESM2-35M", TRUE)
+```
+
+```{r ESM2-150M, cache = FALSE}
+plot_token_prediction("ESM2-150M", TRUE)
+```
+
+```{r ESM2-650M, cache = FALSE}
+plot_token_prediction("ESM2-650M", TRUE)
+```
+```{r ft-ESM2, cache = FALSE}
+plot_token_prediction("ft-ESM2", TRUE)
+```
