@@ -1,5 +1,5 @@
 ---
-title: "Token prediction"
+title: "Token classification"
 output:
   html_document: default
   pdf_document: default
@@ -43,7 +43,7 @@ if(!require("tidyr")) {
 }
 library(tidyr)
 
-knitr::opts_chunk$set(fig.width=10, fig.height=12)
+knitr::opts_chunk$set(fig.width=14, fig.height=16)
 ```
 
 ```{r plot_token_prediction, cache = FALSE}
@@ -53,7 +53,7 @@ plot_token_prediction <- function(model_name, is_ft) {
 
   ft_pt <- if (is_ft) "FT" else "PT"
   token_pred_data_path <- file.path(
-    data_path, glue("token_prediction_{model_name}_{ft_pt}.parquet"))
+    data_path, glue("token_prediction_{model_name}_{chain}_{ft_pt}.parquet"))
   data <- read_parquet(token_pred_data_path)
 
   df <- data[, (names(data) %in%
@@ -71,7 +71,6 @@ plot_token_prediction <- function(model_name, is_ft) {
       predicted_labels = sum(predicted_labels, na.rm = TRUE),
       .groups = 'drop'
     )
-
 
   # Fill in missing values
   aggregated_df <- tidyr::complete(
@@ -137,7 +136,7 @@ plot_token_prediction <- function(model_name, is_ft) {
       "missing" = "#6bd2db"
     )) +
     labs(
-      title = glue("Labels - {model_name}"),
+      title = glue("Labels"),
       x = glue("Chain: {chain}"),
       y = "Sequences",
       fill = "Color"
@@ -165,7 +164,7 @@ plot_token_prediction <- function(model_name, is_ft) {
       "missing" = "#6bd2db"
     )) +
     labs(
-      title = glue("Predicted labels - {model_name}"),
+      title = glue("Predicted labels - {model_name} - {ft_pt}"),
       x = glue("Chain: {chain}"),
       y = "Sequences",
       fill = "Color"
@@ -189,30 +188,46 @@ plot_token_prediction <- function(model_name, is_ft) {
 ```
 
 ```{r AntiBERTa2, cache = FALSE}
+plot_token_prediction("AntiBERTa2", FALSE)
 plot_token_prediction("AntiBERTa2", TRUE)
 ```
+
 ```{r AntiBERTy, cache = FALSE}
+plot_token_prediction("AntiBERTy", FALSE)
 plot_token_prediction("AntiBERTy", TRUE)
 ```
+
 ```{r BALM-paired, cache = FALSE}
+plot_token_prediction("BALM-paired", FALSE)
 plot_token_prediction("BALM-paired", TRUE)
 ```
 
 ```{r ESM2-8M, cache = FALSE}
+plot_token_prediction("ESM2-8M", FALSE)
 plot_token_prediction("ESM2-8M", TRUE)
 ```
 
 ```{r ESM2-35M, cache = FALSE}
+plot_token_prediction("ESM2-35M", FALSE)
 plot_token_prediction("ESM2-35M", TRUE)
 ```
 
 ```{r ESM2-150M, cache = FALSE}
+plot_token_prediction("ESM2-150M", FALSE)
 plot_token_prediction("ESM2-150M", TRUE)
 ```
 
 ```{r ESM2-650M, cache = FALSE}
+plot_token_prediction("ESM2-650M", FALSE)
 plot_token_prediction("ESM2-650M", TRUE)
 ```
+
 ```{r ft-ESM2, cache = FALSE}
+plot_token_prediction("ft-ESM2", FALSE)
 plot_token_prediction("ft-ESM2", TRUE)
+```
+
+```{r ESM2-3B, cache = FALSE}
+plot_token_prediction("ESM2-3B", FALSE)
+plot_token_prediction("ESM2-3B", TRUE)
 ```
