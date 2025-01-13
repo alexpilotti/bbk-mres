@@ -159,6 +159,10 @@ def predict(data, chain, model_name, model_path, use_default_model_tokenizer):
         model_name, model_path, use_default_model_tokenizer)
     model, tokenizer = model_loader.load_model_for_token_classification()
 
+    device = common.get_best_device()
+    LOG.info(f"Using device: {device}")
+    model = model.to(device)
+
     data = data[data["dataset"] == "test"]
 
     data["sequence"] = data[f"sequence_{chain}"]
@@ -172,6 +176,8 @@ def predict(data, chain, model_name, model_path, use_default_model_tokenizer):
 
         inputs = tokenizer(seq, return_tensors="pt",
                            is_split_into_words=False)
+        inputs = {key: value.to(device) for key, value in inputs.items()}
+
         outputs = model(**inputs)
         logits = outputs.logits
 
