@@ -1,0 +1,134 @@
+---
+title: "Token classification metrics"
+output:
+  html_document: default
+  pdf_document: default
+params:
+  chain: "H"
+  data_path: !r file.path(getwd(), "data")
+---
+```{r setup, warning = FALSE, message = FALSE, cache = FALSE}
+if(!require("jsonlite")) {
+  install.packages("jsonlite")
+}
+library(jsonlite)
+
+if(!require("dplyr")) {
+  install.packages("dplyr")
+}
+library(dplyr)
+
+if(!require("ggplot2")) {
+  install.packages("ggplot2")
+}
+library(ggplot2)
+
+if(!require("stringr")) {
+  install.packages("stringr")
+}
+library(stringr)
+
+if(!require("tidyr")) {
+  install.packages("tidyr")
+}
+library(tidyr)
+
+if(!require("glue")) {
+  install.packages("glue")
+}
+library(glue)
+```
+
+```{r plot_metrics, cache = FALSE}
+plot_metrics <- function(model_name, is_ft) {
+  chain <- params$chain
+  data_path <- params$data_path
+
+  ft_pt <- if (is_ft) "FT" else "PT"
+
+  json_file <- file.path(
+    data_path, glue("token_predict_metrics_{model_name}_{chain}_{ft_pt}.json"))
+
+  json_data <- fromJSON(json_file, flatten = TRUE)
+  model_name <- json_data$model_name
+
+  data <- data.frame(
+    model_name = json_data$model_name,
+    model_path = ifelse(is.null(json_data$model_path), NA,
+                        json_data$model_path),
+    num_parameters = json_data$num_parameters,
+    test_loss = json_data$test_loss,
+    accuracy = json_data$accuracy
+  )
+
+  metrics <- json_data[names(json_data) %in% c(
+    "0", "1", "macro avg", "weighted avg")]
+  metrics_df <- bind_rows(metrics, .id = "metric_type")
+
+  data <- metrics_df %>% bind_cols(data)
+
+  metrics_long <- metrics_df %>%
+    select(metric_type, precision, recall, `f1-score`) %>%
+    pivot_longer(cols = c(precision, recall, `f1-score`),
+                 names_to = "metric",
+                 values_to = "value")
+
+  ggplot(metrics_long, aes(x = metric, y = value, color = metric_type)) +
+    geom_point(size = 3) +
+    labs(
+      title = glue("{model_name} - {chain} - {ft_pt}"),
+      x = "Metric",
+      y = "Value",
+      color = "Metric Type"
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(hjust = 0.5),
+    )
+}
+```
+
+```{r AntiBERTa2, cache = FALSE}
+plot_metrics("AntiBERTa2", TRUE)
+plot_metrics("AntiBERTa2", FALSE)
+```
+
+```{r AntiBERTy, cache = FALSE}
+plot_metrics("AntiBERTy", TRUE)
+plot_metrics("AntiBERTy", FALSE)
+```
+
+```{r BALM-paired, cache = FALSE}
+plot_metrics("BALM-paired", TRUE)
+plot_metrics("BALM-paired", FALSE)
+```
+
+```{r ESM-8M, cache = FALSE}
+plot_metrics("ESM2-8M", TRUE)
+plot_metrics("ESM2-8M", FALSE)
+```
+
+```{r ESM-35M, cache = FALSE}
+plot_metrics("ESM2-35M", TRUE)
+plot_metrics("ESM2-35M", FALSE)
+```
+
+```{r ESM-150M, cache = FALSE}
+plot_metrics("ESM2-150M", TRUE)
+plot_metrics("ESM2-150M", FALSE)
+```
+
+```{r ESM-650M, cache = FALSE}
+plot_metrics("ESM2-650M", TRUE)
+plot_metrics("ESM2-650M", FALSE)
+```
+
+```{r ESM-3B, cache = FALSE}
+plot_metrics("ESM2-3B", TRUE)
+plot_metrics("ESM2-3B", FALSE)
+```
+
+```{r ft-ESM2, cache = FALSE}
+plot_metrics("ft-ESM2", TRUE)
+plot_metrics("ft-ESM2", FALSE)
+```
