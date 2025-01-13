@@ -1,5 +1,6 @@
 import itertools
 import logging
+import os
 
 import datasets
 import numpy as np
@@ -17,22 +18,27 @@ LR = 1e-5
 
 
 def _compute_metrics(p):
-    predictions, labs = p
+    predictions, labels = p
+    predictions = np.argmax(predictions, axis=2)
 
-    probs = torch.softmax(torch.from_numpy(predictions),
-                          dim=1).detach().numpy()[:, -1]
-    preds = np.argmax(predictions, axis=1)
+    true_predictions = []
+    true_labels = []
 
-    return {
-        "precision": metrics.precision_score(labs, preds, pos_label=1),
-        "recall": metrics.recall_score(labs, preds, pos_label=1),
-        "f1": metrics.f1_score(labs, preds, pos_label=1, average="weighted"),
-        "apr": metrics.average_precision_score(labs, probs, pos_label=1),
-        "balanced_accuracy": metrics.balanced_accuracy_score(labs, preds),
-        "auc": metrics.roc_auc_score(labs, probs),
-        "mcc": metrics.matthews_corrcoef(labs, preds),
-        "specificity": common.specificity(labs, preds),
-    }
+    for prediction, label in zip(predictions, labels):
+        for pred, lab in zip(prediction, label):
+            if lab != -100:  # Exclude special tokens
+                true_predictions.append(pred)
+                true_labels.append(lab)
+
+    report = metrics.classification_report(
+        y_true=true_labels,
+        y_pred=true_predictions,
+        zero_division=0,
+        digits=4,
+        output_dict=True
+    )
+
+    return report
 
 
 def train(data, chain, model_name, model_path, use_default_model_tokenizer,
@@ -130,6 +136,22 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
 
     if save_strategy == transformers.IntervalStrategy.NO:
         trainer.save_model()
+
+    model.eval()
+    outputs = trainer.predict(tokenized_dataset[common.TEST])
+    metrics = _compute_metrics((outputs.predictions, outputs.label_ids))
+    probs = torch.softmax(
+        torch.from_numpy(outputs.predictions), dim=1).detach().numpy()[:, -1]
+
+    print(f"Predicted the binding probability of {probs.shape[0]} sequences")
+
+    metrics['model_name'] = model_name
+    metrics['model_path'] = model_path
+    metrics['num_parameters'] = sum(p.numel() for p in model.parameters())
+    metrics['test_loss'] = outputs.metrics['test_loss']
+
+    out_file = os.path.join(output_model_path, "model_test_stats.json")
+    common.save_json_file(metrics, out_file)
 
 
 def predict(data, chain, model_name, model_path, use_default_model_tokenizer):
