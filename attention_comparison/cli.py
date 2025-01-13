@@ -362,9 +362,14 @@ def _process_seq_predict_command(args):
 
 def _process_token_predict_command(args):
     data = token_class_ft.load_data(args.input)
-    data, metrics = token_class_ft.predict(data, args.chain, args.model,
-                                           args.model_path,
-                                           args.use_default_model_tokenizer)
+
+    data = token_class_ft.predict_labels(
+        data, args.chain, args.model, args.model_path,
+        args.use_default_model_tokenizer)
+    metrics = token_class_ft.predict_metrics(
+        data, args.chain, args.model, args.model_path,
+        args.use_default_model_tokenizer)
+
     data.to_parquet(args.prediction)
     common.save_json_file(metrics, args.output)
 

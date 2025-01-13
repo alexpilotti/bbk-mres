@@ -124,7 +124,7 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
     )
 
     tokenized_dataset = _prepare_dataset(
-        model_loader, tokenizer, data, chain, [common.TRAIN, common.TEST])
+        model_loader, tokenizer, data, chain, [common.TRAIN])
     data_collator = transformers.DataCollatorForTokenClassification(tokenizer)
 
     trainer = transformers.Trainer(
@@ -141,6 +141,25 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
     if save_strategy == transformers.IntervalStrategy.NO:
         trainer.save_model()
 
+
+def predict_metrics(data, chain, model_name, model_path,
+                    use_default_model_tokenizer):
+    model_loader = models.get_model_loader(
+        model_name, model_path, use_default_model_tokenizer)
+    model, tokenizer = model_loader.load_model_for_token_classification()
+
+    device = common.get_best_device()
+    LOG.info(f"Using device: {device}")
+    model = model.to(device)
+
+    trainer = transformers.Trainer(
+        model,
+        tokenizer=tokenizer
+    )
+
+    tokenized_dataset = _prepare_dataset(
+        model_loader, tokenizer, data, chain, [common.TEST])
+
     model.eval()
     outputs = trainer.predict(tokenized_dataset[common.TEST])
     metrics = _compute_metrics((outputs.predictions, outputs.label_ids))
@@ -154,11 +173,11 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
     metrics['num_parameters'] = sum(p.numel() for p in model.parameters())
     metrics['test_loss'] = outputs.metrics['test_loss']
 
-    out_file = os.path.join(output_model_path, "model_test_stats.json")
-    common.save_json_file(metrics, out_file)
+    return metrics
 
 
-def predict(data, chain, model_name, model_path, use_default_model_tokenizer):
+def predict_labels(data, chain, model_name, model_path,
+                   use_default_model_tokenizer):
     model_loader = models.get_model_loader(
         model_name, model_path, use_default_model_tokenizer)
     model, tokenizer = model_loader.load_model_for_token_classification()
@@ -167,7 +186,7 @@ def predict(data, chain, model_name, model_path, use_default_model_tokenizer):
     LOG.info(f"Using device: {device}")
     model = model.to(device)
 
-    data = data[data["dataset"] == "test"]
+    data = data[data["dataset"] == common.TEST]
 
     data["sequence"] = data[f"sequence_{chain}"]
     data["labels"] = data[f"labels_{chain}"]
@@ -204,11 +223,8 @@ def predict(data, chain, model_name, model_path, use_default_model_tokenizer):
         all_predicted_labels.append(
             ",".join(map(str, predicted_labels_non_special_tokens)))
 
-    # TODO: add metrics
-    metrics = {}
-
     data["predicted_labels"] = all_predicted_labels
-    return data, metrics
+    return data
 
 
 def load_data(data_path):
