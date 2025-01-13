@@ -41,23 +41,7 @@ def _compute_metrics(p):
     return report
 
 
-def train(data, chain, model_name, model_path, use_default_model_tokenizer,
-          frozen_layers, output_model_path, batch_size, epochs, save_strategy):
-    common.set_seed()
-
-    model_loader = models.get_model_loader(
-        model_name, model_path, use_default_model_tokenizer)
-    model, tokenizer = model_loader.load_model_for_token_classification()
-
-    device = common.get_best_device()
-    LOG.info(f"Using device: {device}")
-    model = model.to(device)
-
-    model_loader.freeze_weights(model, frozen_layers)
-
-    model_size = sum(p.numel() for p in model.parameters())
-    LOG.info(f"Model size: {model_size / 1e6:.2f}M")
-
+def _prepare_dataset(model_loader, tokenizer, data, chain, ds_names):
     data["sequence"] = data[f"sequence_{chain}"]
     data["labels"] = data[f"labels_{chain}"]
 
@@ -67,7 +51,7 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
                 x if chain == 'L' else None))
 
     ds = datasets.DatasetDict()
-    for ds_name in [common.TRAIN, common.TEST]:
+    for ds_name in ds_names:
         df = data[data[common.DATASET_COL_NAME] == ds_name].drop(
                 columns=[c for c in data.columns if c not in
                          ["sequence", "labels"]])
@@ -102,7 +86,25 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
         tokenized_inputs["labels"] = aligned_labels_batch
         return tokenized_inputs
 
-    tokenized_dataset = ds.map(_tokenize_and_align_labels, batched=True)
+    return ds.map(_tokenize_and_align_labels, batched=True)
+
+
+def train(data, chain, model_name, model_path, use_default_model_tokenizer,
+          frozen_layers, output_model_path, batch_size, epochs, save_strategy):
+    common.set_seed()
+
+    model_loader = models.get_model_loader(
+        model_name, model_path, use_default_model_tokenizer)
+    model, tokenizer = model_loader.load_model_for_token_classification()
+
+    device = common.get_best_device()
+    LOG.info(f"Using device: {device}")
+    model = model.to(device)
+
+    model_loader.freeze_weights(model, frozen_layers)
+
+    model_size = sum(p.numel() for p in model.parameters())
+    LOG.info(f"Model size: {model_size / 1e6:.2f}M")
 
     LOG.info(f"Saving model to {output_model_path}")
     training_args = transformers.TrainingArguments(
@@ -121,6 +123,8 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
         seed=common.DEFAULT_SEED
     )
 
+    tokenized_dataset = _prepare_dataset(
+        model_loader, tokenizer, data, chain, [common.TRAIN, common.TEST])
     data_collator = transformers.DataCollatorForTokenClassification(tokenizer)
 
     trainer = transformers.Trainer(
