@@ -197,7 +197,7 @@ def predict_labels(data, chain, model_name, model_path,
 
         inputs = tokenizer(seq, return_tensors="pt",
                            is_split_into_words=False)
-        inputs = {key: value.to(device) for key, value in inputs.items()}
+        inputs = {key: value.to(model.device) for key, value in inputs.items()}
 
         outputs = model(**inputs)
         logits = outputs.logits
