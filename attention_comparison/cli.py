@@ -71,6 +71,10 @@ def _add_common_args(parser):
         "-c", "--chain", required=True,
         choices=common.CHAIN_TYPES,
         help="The antibody chain(s), can be H, L, HL")
+    parser.add_argument(
+        "-d", "--device", required=False,
+        type=str,
+        help="The device to use, e.g. cuda, cpu")
 
 
 def _add_shuffle_data_args(parser):
@@ -341,7 +345,7 @@ def _process_seq_fine_tuning_command(args):
     seq_class_ft.train(data, args.chain, args.model, args.model_path,
                        args.use_default_model_tokenizer, args.frozen_layers,
                        args.output, args.batch_size, args.epochs,
-                       args.save_strategy)
+                       args.save_strategy, args.device)
 
 
 def _process_token_fine_tuning_command(args):
@@ -349,14 +353,15 @@ def _process_token_fine_tuning_command(args):
     token_class_ft.train(data, args.chain, args.model, args.model_path,
                          args.use_default_model_tokenizer, args.frozen_layers,
                          args.output, args.batch_size, args.epochs,
-                         args.save_strategy)
+                         args.save_strategy, args.device)
 
 
 def _process_seq_predict_command(args):
     data = seq_class_ft.load_data(args.input)
     _, metrics = seq_class_ft.predict(data, args.chain, args.model,
                                       args.model_path,
-                                      args.use_default_model_tokenizer)
+                                      args.use_default_model_tokenizer,
+                                      args.device)
     common.save_json_file(metrics, args.output)
 
 
@@ -365,10 +370,10 @@ def _process_token_predict_command(args):
 
     data = token_class_ft.predict_labels(
         data, args.chain, args.model, args.model_path,
-        args.use_default_model_tokenizer)
+        args.use_default_model_tokenizer, args.device)
     metrics = token_class_ft.predict_metrics(
         data, args.chain, args.model, args.model_path,
-        args.use_default_model_tokenizer)
+        args.use_default_model_tokenizer, args.device)
 
     data.to_parquet(args.prediction)
     common.save_json_file(metrics, args.output)
@@ -383,7 +388,7 @@ def _process_attentions_command(args):
 
     attentions = attention_weights.get_attention_weights(
         args.model, args.model_path, args.use_default_model_tokenizer,
-        sequences, args.layers)
+        sequences, args.layers, args.device)
 
     attention_weights.save_attentions(attentions, args.output)
 
@@ -394,7 +399,7 @@ def _process_embeddings_command(args):
 
     emb = embeddings.get_embeddings(
         args.model, args.model_path, args.use_default_model_tokenizer,
-        sequences)
+        sequences, args.device)
     embeddings.save_embeddings(emb, args.output)
 
 

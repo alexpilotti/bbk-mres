@@ -97,16 +97,16 @@ def _get_dataset_tokenized(data, chain, tokenizer, model_loader):
 
 
 def train(data, chain, model_name, model_path, use_default_model_tokenizer,
-          frozen_layers, output_model_path, batch_size, epochs, save_strategy):
+          frozen_layers, output_model_path, batch_size, epochs, save_strategy,
+          device):
     common.set_seed()
 
     model_loader = models.get_model_loader(
         model_name, model_path, use_default_model_tokenizer)
     model, tokenizer = model_loader.load_model_for_sequence_classification()
 
-    device = common.get_best_device()
-    LOG.info(f"Using device: {device}")
-    model = model.to(device)
+    if device:
+        model = model.to(device)
 
     model_loader.freeze_weights(model, frozen_layers)
 
@@ -158,16 +158,16 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
     common.save_json_file(out, out_file)
 
 
-def predict(data, chain, model_name, model_path, use_default_model_tokenizer):
+def predict(data, chain, model_name, model_path, use_default_model_tokenizer,
+            device):
     common.set_seed()
 
     model_loader = models.get_model_loader(
         model_name, model_path, use_default_model_tokenizer)
     model, tokenizer = model_loader.load_model_for_sequence_classification()
 
-    device = common.get_best_device()
-    LOG.info(f"Using device: {device}")
-    model = model.to(device)
+    if device:
+        model = model.to(device)
 
     ab_dataset_tokenized = _get_dataset_tokenized(
         data, chain, tokenizer, model_loader)

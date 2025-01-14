@@ -111,9 +111,9 @@ class BaseModelLoader(metaclass=abc.ABCMeta):
     def _get_model_embeddings(self):
         pass
 
-    def get_embeddings(self, formatted_sequences):
+    def get_embeddings(self, formatted_sequences, device):
         return self._get_model_embeddings().get_embeddings(
-            formatted_sequences)
+            formatted_sequences, device)
 
     @abc.abstractmethod
     def get_max_length(self):

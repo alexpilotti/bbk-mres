@@ -37,14 +37,15 @@ class BaseEmbeddigs(metaclass=abc.ABCMeta):
             s.get(common.CHAIN_L))
             for s in sequences]
 
-    def get_embeddings(self, sequences):
+    def get_embeddings(self, sequences, device):
         max_length = self._model_loader.get_max_length()
         batch_size = self._get_batch_size()
         num_batches = math.ceil(len(sequences) / batch_size)
 
         model, tokenizer = self._model_loader.load_model_for_embeddings()
-        device = common.get_best_device()
-        model = model.to(device)
+
+        if device:
+            model = model.to(device)
 
         formatted_seqs = self._format_sequences(sequences)
 
@@ -89,13 +90,14 @@ class AntiBERTyEmbeddings(BaseEmbeddigs):
     def _get_batch_size(self):
         return ANTIBERTY_BATCH_SIZE
 
-    def get_embeddings(self, sequences):
+    def get_embeddings(self, sequences, device):
         batch_size = self._get_batch_size()
         num_batches = math.ceil(len(sequences) / batch_size)
 
         model, tokenizer = self._model_loader.load_model_for_embeddings()
-        device = common.get_best_device()
-        model = model.to(device)
+
+        if device:
+            model = model.to(device)
 
         antiberty_runner = _AntiBERTyCustomRunner(model, tokenizer, device)
 

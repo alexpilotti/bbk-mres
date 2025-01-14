@@ -43,14 +43,13 @@ def _get_adjusted_sequence_numberings(chain_h_adj, chain_l_adj):
 
 
 def get_attention_weights(model_name, model_path, use_default_model_tokenizer,
-                          sequences, layers):
+                          sequences, layers, device):
     model_loader = models.get_model_loader(
         model_name, model_path, use_default_model_tokenizer)
     model, tokenizer = model_loader.load_model_for_sequence_classification()
 
-    device = common.get_best_device()
-    LOG.info(f"Using device: {device}")
-    model = model.to(device)
+    if device:
+        model = model.to(device)
 
     attentions = []
 
