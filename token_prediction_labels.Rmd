@@ -5,6 +5,7 @@ output:
   pdf_document: default
 params:
   chain: "H"
+  region: "FULL"
   data_path: !r file.path(getwd(), "data")
 ---
 ```{r setup, warning = FALSE, message = FALSE, cache = FALSE}
@@ -49,11 +50,13 @@ knitr::opts_chunk$set(fig.width=14, fig.height=16)
 ```{r plot_token_prediction, cache = FALSE}
 plot_token_prediction <- function(model_name, is_ft) {
   chain <- params$chain
+  region <- params$region
   data_path <- params$data_path
 
   ft_pt <- if (is_ft) "FT" else "PT"
   token_pred_data_path <- file.path(
-    data_path, glue("token_prediction_{model_name}_{chain}_{ft_pt}.parquet"))
+    data_path,
+    glue("token_prediction_{model_name}_{chain}_{region}_{ft_pt}.parquet"))
   data <- read_parquet(token_pred_data_path)
 
   df <- data[, (names(data) %in%
@@ -137,7 +140,7 @@ plot_token_prediction <- function(model_name, is_ft) {
     )) +
     labs(
       title = glue("Labels"),
-      x = glue("Chain: {chain}"),
+      x = glue("Chain: {chain} - {region}"),
       y = "Sequences",
       fill = "Color"
     ) +
@@ -165,7 +168,7 @@ plot_token_prediction <- function(model_name, is_ft) {
     )) +
     labs(
       title = glue("Predicted labels - {model_name} - {ft_pt}"),
-      x = glue("Chain: {chain}"),
+      x = glue("Chain: {chain} - {region}"),
       y = "Sequences",
       fill = "Color"
     ) +
