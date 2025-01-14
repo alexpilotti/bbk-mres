@@ -222,12 +222,17 @@ plot_token_prediction("ESM2-650M", FALSE)
 plot_token_prediction("ESM2-650M", TRUE)
 ```
 
-```{r ft-ESM2, cache = FALSE}
-plot_token_prediction("ft-ESM2", FALSE)
-plot_token_prediction("ft-ESM2", TRUE)
-```
-
 ```{r ESM2-3B, cache = FALSE}
 plot_token_prediction("ESM2-3B", FALSE)
 plot_token_prediction("ESM2-3B", TRUE)
+```
+
+```{r ESM2-3B, cache = FALSE}
+plot_token_prediction("ESM2-15B", FALSE)
+plot_token_prediction("ESM2-15B", TRUE)
+```
+
+```{r ft-ESM2, cache = FALSE}
+plot_token_prediction("ft-ESM2", FALSE)
+plot_token_prediction("ft-ESM2", TRUE)
 ```
