@@ -130,6 +130,9 @@ class BaseModelLoader(metaclass=abc.ABCMeta):
             self._model_path)
         return model, tokenizer
 
+    def format_simple_sequence(self, sequence):
+        return self.format_sequence(sequence, None)
+
     def format_sequence(self, chain_h, chain_l):
         if chain_h and chain_l:
             return f"{chain_h}{self._cls_token}{self._cls_token}{chain_l}"

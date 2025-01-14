@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 from sklearn import metrics
 import torch
+from tqdm import tqdm
 import transformers
 
 import common
@@ -15,6 +16,14 @@ import models
 LOG = logging.getLogger(__name__)
 
 LR = 1e-5
+
+# IMGT numbering
+# https://www.imgt.org/IMGTScientificChart/Nomenclature/IMGT-FRCDRdefinition.html
+REGIONS = {
+    "CDR1": [27, 38],
+    "CDR2": [56, 65],
+    "CDR3": [105, 118]
+    }
 
 
 def _compute_metrics(p):
@@ -41,23 +50,82 @@ def _compute_metrics(p):
     return report
 
 
-def _prepare_dataset(model_loader, tokenizer, data, chain, ds_names):
+def _get_num_pos(pos):
+    """Needed for positions with insertion codes, e.g. 110A."""
+    return int("".join(c for c in pos if c.isdigit()))
+
+
+def _filter_region_data(data, region):
+    if region not in REGIONS:
+        raise Exception(f'Invalid region name: "{region}". '
+                        f'Valid options are: {", ".join(REGIONS.keys())}')
+
+    region_range = range(*REGIONS[region])
+
+    LOG.info(f"Retrieving residues in region {region}, "
+             f"between positions: {region_range[0]}-{region_range[-1]}")
+
+    data["positions_num"] = data["positions"].apply(
+        lambda x: list(map(_get_num_pos, x.split(","))))
+
+    data["sequence"] = data.apply(
+        lambda row: "".join(
+            row["sequence"][i] for i, pos in enumerate(row["positions_num"])
+            if pos in region_range),
+        axis=1)
+
+    data["labels"] = data.apply(
+        lambda row:
+            [row["labels"][i] for i, pos in enumerate(row["positions_num"])
+             if pos in region_range],
+        axis=1)
+
+    data["positions"] = data["positions"].apply(
+        lambda x: ",".join(
+            [pos for pos in x.split(",")
+             if _get_num_pos(pos) in region_range]))
+
+    return data
+
+
+def _prepare_data(data, chain, region, ds_names):
+    data = data[data[common.DATASET_COL_NAME].isin(ds_names)]
+
     data["sequence"] = data[f"sequence_{chain}"]
     data["labels"] = data[f"labels_{chain}"]
+    data["positions"] = data[f"positions_{chain}"]
 
-    data["sequence"] = data["sequence"].apply(
-        lambda x: model_loader.format_sequence(
-                x if chain == 'H' else None,
-                x if chain == 'L' else None))
+    data["labels"] = data["labels"].apply(
+        lambda x: list(map(int, x.split(","))))
+
+    if region:
+        if chain == common.CHAIN_HL:
+            raise Exception(
+                "When specifying a region, the combined HL sequence is not "
+                "supported")
+        data = _filter_region_data(data, region)
+
+    return data
+
+
+def _prepare_dataset(model_loader, tokenizer, data, chain, region, ds_names):
+    data = _prepare_data(data, chain, region, ds_names)
+
+    if region:
+        data["sequence"] = data["sequence"].apply(
+            lambda x: model_loader.format_simple_sequence(x))
+    else:
+        data["sequence"] = data.apply(
+            lambda row: model_loader.format_sequence(
+                    row["sequence_H"] if common.CHAIN_H in chain else None,
+                    row["sequence_L"] if common.CHAIN_L in chain else None),
+            axis=1)
 
     ds = datasets.DatasetDict()
-    for ds_name in ds_names:
-        df = data[data[common.DATASET_COL_NAME] == ds_name].drop(
-                columns=[c for c in data.columns if c not in
-                         ["sequence", "labels"]])
-        df["labels"] = df["labels"].apply(
-            lambda x: [int(x) for x in x.split(',')])
-        ds[ds_name] = datasets.Dataset.from_pandas(df)
+    for ds_name, ds_data in data.groupby(common.DATASET_COL_NAME):
+        ds[ds_name] = datasets.Dataset.from_pandas(
+            ds_data.drop(columns=[
+                c for c in data.columns if c not in ["sequence", "labels"]]))
 
     def _tokenize_and_align_labels(batch_data):
         max_length = model_loader.get_max_length()
@@ -89,8 +157,10 @@ def _prepare_dataset(model_loader, tokenizer, data, chain, ds_names):
     return ds.map(_tokenize_and_align_labels, batched=True)
 
 
-def train(data, chain, model_name, model_path, use_default_model_tokenizer,
-          frozen_layers, output_model_path, batch_size, epochs, save_strategy):
+def train(data, chain, region, model_name, model_path,
+          use_default_model_tokenizer, frozen_layers, output_model_path,
+          batch_size, epochs, save_strategy):
+    data = data.copy()
     common.set_seed()
 
     model_loader = models.get_model_loader(
@@ -122,7 +192,7 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
     )
 
     tokenized_dataset = _prepare_dataset(
-        model_loader, tokenizer, data, chain, [common.TRAIN])
+        model_loader, tokenizer, data, chain, region, [common.TRAIN])
     data_collator = transformers.DataCollatorForTokenClassification(tokenizer)
 
     trainer = transformers.Trainer(
@@ -140,8 +210,10 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
         trainer.save_model()
 
 
-def predict_metrics(data, chain, model_name, model_path,
+def predict_metrics(data, chain, region, model_name, model_path,
                     use_default_model_tokenizer):
+    data = data.copy()
+
     model_loader = models.get_model_loader(
         model_name, model_path, use_default_model_tokenizer)
     model, tokenizer = model_loader.load_model_for_token_classification()
@@ -152,7 +224,7 @@ def predict_metrics(data, chain, model_name, model_path,
     )
 
     tokenized_dataset = _prepare_dataset(
-        model_loader, tokenizer, data, chain, [common.TEST])
+        model_loader, tokenizer, data, chain, region, [common.TEST])
 
     model.eval()
     outputs = trainer.predict(tokenized_dataset[common.TEST])
@@ -160,7 +232,8 @@ def predict_metrics(data, chain, model_name, model_path,
     probs = torch.softmax(
         torch.from_numpy(outputs.predictions), dim=1).detach().numpy()[:, -1]
 
-    print(f"Predicted the binding probability of {probs.shape[0]} sequences")
+    LOG.info(
+        f"Predicted the binding probability of {probs.shape[0]} sequences")
 
     metrics['model_name'] = model_name
     metrics['model_path'] = model_path
@@ -170,22 +243,27 @@ def predict_metrics(data, chain, model_name, model_path,
     return metrics
 
 
-def predict_labels(data, chain, model_name, model_path,
+def predict_labels(data, chain, region, model_name, model_path,
                    use_default_model_tokenizer):
+    data = data.copy()
+
     model_loader = models.get_model_loader(
         model_name, model_path, use_default_model_tokenizer)
     model, tokenizer = model_loader.load_model_for_token_classification()
 
-    data = data[data["dataset"] == common.TEST]
+    data = _prepare_data(data, chain, region, [common.TEST])
+    data["labels"] = data["labels"].apply(lambda x: ",".join(map(str, x)))
 
-    data["sequence"] = data[f"sequence_{chain}"]
-    data["labels"] = data[f"labels_{chain}"]
+    pbar = tqdm(total=len(data), desc="Processing labels")
 
     all_predicted_labels = []
     for row in data.itertuples():
-        seq = model_loader.format_sequence(
-            row.sequence_H if 'H' in chain else None,
-            row.sequence_L if 'L' in chain else None)
+        if region:
+            seq = model_loader.format_simple_sequence(row.sequence)
+        else:
+            seq = model_loader.format_sequence(
+                row.sequence_H if common.CHAIN_H in chain else None,
+                row.sequence_L if common.CHAIN_L in chain else None)
 
         inputs = tokenizer(seq, return_tensors="pt",
                            is_split_into_words=False)
@@ -205,15 +283,20 @@ def predict_labels(data, chain, model_name, model_path,
             elif token not in tokenizer.all_special_tokens:
                 predicted_labels_non_special_tokens.append(predicted_labels[i])
 
-        LOG.info("Expected labels / Predicted labels: "
-                 f"{row.labels} {predicted_labels_non_special_tokens}")
-
+        LOG.debug("Expected labels / Predicted labels: "
+                  f"{row.labels} {predicted_labels_non_special_tokens}")
         assert len(row.sequence) == len(predicted_labels_non_special_tokens)
 
         all_predicted_labels.append(
             ",".join(map(str, predicted_labels_non_special_tokens)))
+        pbar.update(1)
 
     data["predicted_labels"] = all_predicted_labels
+
+    data = data.drop(
+        columns=[c for c in data.columns if c not in
+                 ["iden_code", "positions", "labels", "predicted_labels"]])
+
     return data
 
 

@@ -153,6 +153,14 @@ def _add_token_predict_args(parser):
         help="Path of the file containing the predicted labels")
 
 
+def _add_region_args(parser):
+    parser.add_argument(
+        "--region", required=False,
+        type=str,
+        help="Use only the provided region of the input sequences for fine "
+        "tuning, e.g. CDR3")
+
+
 def _add_attentions_args(parser):
     parser.add_argument(
         "-o", "--output", required=True,
@@ -279,6 +287,7 @@ def _parse_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     _add_common_args(token_fine_tuning_parser)
     _add_fine_tuning_args(token_fine_tuning_parser)
+    _add_region_args(token_fine_tuning_parser)
 
     seq_predict_parser = subparsers.add_parser(
         CMD_SEQ_PREDICT, help="Sequence classification prediction",
@@ -291,6 +300,7 @@ def _parse_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     _add_common_args(token_predict_parser)
     _add_token_predict_args(token_predict_parser)
+    _add_region_args(token_predict_parser)
 
     attentions_parser = subparsers.add_parser(
         CMD_ATTENTIONS, help="Get attentions",
@@ -352,10 +362,10 @@ def _process_seq_fine_tuning_command(args):
 def _process_token_fine_tuning_command(args):
     common.set_device(args.device)
     data = token_class_ft.load_data(args.input)
-    token_class_ft.train(data, args.chain, args.model, args.model_path,
-                         args.use_default_model_tokenizer, args.frozen_layers,
-                         args.output, args.batch_size, args.epochs,
-                         args.save_strategy)
+    token_class_ft.train(data, args.chain, args.region, args.model,
+                         args.model_path, args.use_default_model_tokenizer,
+                         args.frozen_layers, args.output, args.batch_size,
+                         args.epochs, args.save_strategy)
 
 
 def _process_seq_predict_command(args):
@@ -371,14 +381,15 @@ def _process_token_predict_command(args):
     common.set_device(args.device)
     data = token_class_ft.load_data(args.input)
 
-    data = token_class_ft.predict_labels(
-        data, args.chain, args.model, args.model_path,
+    predicted_labels_data = token_class_ft.predict_labels(
+        data, args.chain, args.region, args.model, args.model_path,
         args.use_default_model_tokenizer)
+    predicted_labels_data.to_parquet(args.prediction)
+
     metrics = token_class_ft.predict_metrics(
-        data, args.chain, args.model, args.model_path,
+        data, args.chain, args.region, args.model, args.model_path,
         args.use_default_model_tokenizer)
 
-    data.to_parquet(args.prediction)
     common.save_json_file(metrics, args.output)
 
 
