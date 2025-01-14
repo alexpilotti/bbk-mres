@@ -128,7 +128,7 @@ plot_metrics("ESM2-3B", TRUE)
 plot_metrics("ESM2-3B", FALSE)
 ```
 
-```{r ESM-3B, cache = FALSE}
+```{r ESM-15B, cache = FALSE}
 plot_metrics("ESM2-15B", TRUE)
 plot_metrics("ESM2-15B", FALSE)
 ```
