@@ -5,6 +5,7 @@ import os
 import accelerate
 import transformers
 
+import common
 import model_embeddings
 
 LOG = logging.getLogger(__name__)
@@ -57,8 +58,12 @@ _DEFAULT_NUM_FROZEN_LAYERS = 3
 def accelerated(func):
     def wrapper(*args, **kwargs):
         model, tokenizer = func(*args, **kwargs)
-        accelerator = accelerate.Accelerator()
-        model, tokenizer = accelerator.prepare(model, tokenizer)
+        device = common.get_device()
+        if device:
+            model.to(device)
+        else:
+            accelerator = accelerate.Accelerator()
+            model, tokenizer = accelerator.prepare(model, tokenizer)
         LOG.info(f"Model device: {model.device}")
         return model, tokenizer
     return wrapper
@@ -127,9 +132,9 @@ class BaseModelLoader(metaclass=abc.ABCMeta):
     def _get_model_embeddings(self):
         pass
 
-    def get_embeddings(self, formatted_sequences, device):
+    def get_embeddings(self, formatted_sequences):
         return self._get_model_embeddings().get_embeddings(
-            formatted_sequences, device)
+            formatted_sequences)
 
     @abc.abstractmethod
     def get_max_length(self):

@@ -21,6 +21,16 @@ LABEL_COL_NAME = "label"
 
 DEFAULT_SEED = 42
 
+_device = None
+
+
+def set_device(device):
+    _device = device
+
+
+def get_device():
+    return _device
+
 
 def get_best_device():
     return "cuda" if torch.cuda.is_available() else "cpu"

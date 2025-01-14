@@ -341,39 +341,42 @@ def _process_split_data_command(args):
 
 
 def _process_seq_fine_tuning_command(args):
+    common.set_device(args.device)
     data = seq_class_ft.load_data(args.input)
     seq_class_ft.train(data, args.chain, args.model, args.model_path,
                        args.use_default_model_tokenizer, args.frozen_layers,
                        args.output, args.batch_size, args.epochs,
-                       args.save_strategy, args.device)
+                       args.save_strategy)
 
 
 def _process_token_fine_tuning_command(args):
+    common.set_device(args.device)
     data = token_class_ft.load_data(args.input)
     token_class_ft.train(data, args.chain, args.model, args.model_path,
                          args.use_default_model_tokenizer, args.frozen_layers,
                          args.output, args.batch_size, args.epochs,
-                         args.save_strategy, args.device)
+                         args.save_strategy)
 
 
 def _process_seq_predict_command(args):
+    common.set_device(args.device)
     data = seq_class_ft.load_data(args.input)
     _, metrics = seq_class_ft.predict(data, args.chain, args.model,
                                       args.model_path,
-                                      args.use_default_model_tokenizer,
-                                      args.device)
+                                      args.use_default_model_tokenizer)
     common.save_json_file(metrics, args.output)
 
 
 def _process_token_predict_command(args):
+    common.set_device(args.device)
     data = token_class_ft.load_data(args.input)
 
     data = token_class_ft.predict_labels(
         data, args.chain, args.model, args.model_path,
-        args.use_default_model_tokenizer, args.device)
+        args.use_default_model_tokenizer)
     metrics = token_class_ft.predict_metrics(
         data, args.chain, args.model, args.model_path,
-        args.use_default_model_tokenizer, args.device)
+        args.use_default_model_tokenizer)
 
     data.to_parquet(args.prediction)
     common.save_json_file(metrics, args.output)
@@ -388,18 +391,19 @@ def _process_attentions_command(args):
 
     attentions = attention_weights.get_attention_weights(
         args.model, args.model_path, args.use_default_model_tokenizer,
-        sequences, args.layers, args.device)
-
+        sequences, args.layers)
+    common.set_device(args.device)
     attention_weights.save_attentions(attentions, args.output)
 
 
 def _process_embeddings_command(args):
+    common.set_device(args.device)
     sequences = attention_weights.get_sequences(
         args.input, args.chain, args.sequence_indexes)
 
     emb = embeddings.get_embeddings(
         args.model, args.model_path, args.use_default_model_tokenizer,
-        sequences, args.device)
+        sequences)
     embeddings.save_embeddings(emb, args.output)
 
 

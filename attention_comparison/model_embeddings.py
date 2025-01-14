@@ -37,15 +37,12 @@ class BaseEmbeddigs(metaclass=abc.ABCMeta):
             s.get(common.CHAIN_L))
             for s in sequences]
 
-    def get_embeddings(self, sequences, device):
+    def get_embeddings(self, sequences):
         max_length = self._model_loader.get_max_length()
         batch_size = self._get_batch_size()
         num_batches = math.ceil(len(sequences) / batch_size)
 
         model, tokenizer = self._model_loader.load_model_for_embeddings()
-
-        if device:
-            model = model.to(device)
 
         formatted_seqs = self._format_sequences(sequences)
 
@@ -60,8 +57,9 @@ class BaseEmbeddigs(metaclass=abc.ABCMeta):
                     truncation=True,
                     max_length=max_length,
                     return_special_tokens_mask=True)
-                for seq in batch]).to(device)
-            attention_mask = (x != tokenizer.pad_token_id).float().to(device)
+                for seq in batch]).to(model.device)
+            attention_mask = (x != tokenizer.pad_token_id).float().to(
+                model.device)
             with torch.no_grad():
                 outputs = model(x, attention_mask=attention_mask,
                                 output_hidden_states=True)
@@ -80,26 +78,23 @@ class BaseEmbeddigs(metaclass=abc.ABCMeta):
 
 
 class _AntiBERTyCustomRunner(antiberty.AntiBERTyRunner):
-    def __init__(self, model, tokenizer, device):
+    def __init__(self, model, tokenizer):
         self.model = model
         self.tokenizer = tokenizer
-        self.device = device
+        self.device = model.device
 
 
 class AntiBERTyEmbeddings(BaseEmbeddigs):
     def _get_batch_size(self):
         return ANTIBERTY_BATCH_SIZE
 
-    def get_embeddings(self, sequences, device):
+    def get_embeddings(self, sequences):
         batch_size = self._get_batch_size()
         num_batches = math.ceil(len(sequences) / batch_size)
 
         model, tokenizer = self._model_loader.load_model_for_embeddings()
 
-        if device:
-            model = model.to(device)
-
-        antiberty_runner = _AntiBERTyCustomRunner(model, tokenizer, device)
+        antiberty_runner = _AntiBERTyCustomRunner(model, tokenizer)
 
         formatted_seqs = self._format_sequences(sequences)
 

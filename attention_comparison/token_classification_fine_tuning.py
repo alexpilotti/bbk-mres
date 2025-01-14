@@ -90,16 +90,12 @@ def _prepare_dataset(model_loader, tokenizer, data, chain, ds_names):
 
 
 def train(data, chain, model_name, model_path, use_default_model_tokenizer,
-          frozen_layers, output_model_path, batch_size, epochs, save_strategy,
-          device):
+          frozen_layers, output_model_path, batch_size, epochs, save_strategy):
     common.set_seed()
 
     model_loader = models.get_model_loader(
         model_name, model_path, use_default_model_tokenizer)
     model, tokenizer = model_loader.load_model_for_token_classification()
-
-    if device:
-        model = model.to(device)
 
     model_loader.freeze_weights(model, frozen_layers)
 
@@ -143,13 +139,10 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
 
 
 def predict_metrics(data, chain, model_name, model_path,
-                    use_default_model_tokenizer, device):
+                    use_default_model_tokenizer):
     model_loader = models.get_model_loader(
         model_name, model_path, use_default_model_tokenizer)
     model, tokenizer = model_loader.load_model_for_token_classification()
-
-    if device:
-        model = model.to(device)
 
     trainer = transformers.Trainer(
         model,
@@ -176,13 +169,10 @@ def predict_metrics(data, chain, model_name, model_path,
 
 
 def predict_labels(data, chain, model_name, model_path,
-                   use_default_model_tokenizer, device):
+                   use_default_model_tokenizer):
     model_loader = models.get_model_loader(
         model_name, model_path, use_default_model_tokenizer)
     model, tokenizer = model_loader.load_model_for_token_classification()
-
-    if device:
-        model = model.to(device)
 
     data = data[data["dataset"] == common.TEST]
 

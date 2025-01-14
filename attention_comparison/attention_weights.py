@@ -43,13 +43,10 @@ def _get_adjusted_sequence_numberings(chain_h_adj, chain_l_adj):
 
 
 def get_attention_weights(model_name, model_path, use_default_model_tokenizer,
-                          sequences, layers, device):
+                          sequences, layers):
     model_loader = models.get_model_loader(
         model_name, model_path, use_default_model_tokenizer)
     model, tokenizer = model_loader.load_model_for_sequence_classification()
-
-    if device:
-        model = model.to(device)
 
     attentions = []
 
@@ -66,7 +63,7 @@ def get_attention_weights(model_name, model_path, use_default_model_tokenizer,
             formatted_sequence,
             return_tensors='pt',
             truncation=True,
-            max_length=model_loader.get_max_length()).to(device)
+            max_length=model_loader.get_max_length()).to(model.device)
         with torch.no_grad():
             outputs = model(**inputs, output_attentions=True)
 
