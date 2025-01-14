@@ -1,10 +1,13 @@
 import abc
+import logging
 import os
 
+import accelerate
 import transformers
 
 import model_embeddings
 
+LOG = logging.getLogger(__name__)
 
 MODEL_BALM_PAIRED = "BALM-paired"
 MODEL_ANTIBERTY = "AntiBERTy"
@@ -51,6 +54,16 @@ _ESM2_MAX_LENGTH = 512
 _DEFAULT_NUM_FROZEN_LAYERS = 3
 
 
+def accelerated(func):
+    def wrapper(*args, **kwargs):
+        model, tokenizer = func(*args, **kwargs)
+        accelerator = accelerate.Accelerator()
+        model, tokenizer = accelerator.prepare(model, tokenizer)
+        LOG.info(f"Model device: {model.device}")
+        return model, tokenizer
+    return wrapper
+
+
 class BaseModelLoader(metaclass=abc.ABCMeta):
     def check_model_name(model_name):
         return False
@@ -77,6 +90,7 @@ class BaseModelLoader(metaclass=abc.ABCMeta):
             model_name, model_path, use_default_model_tokenizer)
         self._cls_token = None
 
+    @accelerated
     def load_model_for_sequence_classification(self):
         tokenizer = transformers.AutoTokenizer.from_pretrained(
             self._tokenizer_path)
@@ -85,6 +99,7 @@ class BaseModelLoader(metaclass=abc.ABCMeta):
             from_pretrained(self._model_path, num_labels=2)
         return model, tokenizer
 
+    @accelerated
     def load_model_for_token_classification(self, num_labels=2):
         tokenizer = transformers.AutoTokenizer.from_pretrained(
             self._tokenizer_path)
@@ -93,6 +108,7 @@ class BaseModelLoader(metaclass=abc.ABCMeta):
             from_pretrained(self._model_path, num_labels=num_labels)
         return model, tokenizer
 
+    @accelerated
     def load_model_for_embeddings(self):
         tokenizer = transformers.AutoTokenizer.from_pretrained(
             self._tokenizer_path)
@@ -171,6 +187,7 @@ class AntiBERTa2ModelLoader(BaseBERTModelLoader):
     def check_model_name(model_name):
         return model_name == MODEL_ANTIBERTA2
 
+    @accelerated
     def load_model_for_embeddings(self):
         tokenizer = transformers.RoFormerTokenizer.from_pretrained(
             self._tokenizer_path)
@@ -207,6 +224,7 @@ class AntiBERTyModelLoader(BaseBERTModelLoader):
                 models_base_dir, "AntiBERTy_md_smooth")
             self._vocab_txt_path = os.path.join(models_base_dir, "vocab.txt")
 
+    @accelerated
     def load_model_for_sequence_classification(self):
         tokenizer = transformers.BertTokenizer(
             vocab_file=self._vocab_txt_path, do_lower_case=False)
@@ -215,6 +233,7 @@ class AntiBERTyModelLoader(BaseBERTModelLoader):
             from_pretrained(self._model_path, num_labels=2)
         return model, tokenizer
 
+    @accelerated
     def load_model_for_token_classification(self, num_labels=2):
         tokenizer = transformers.BertTokenizer(
             vocab_file=self._vocab_txt_path, do_lower_case=False)
@@ -223,6 +242,7 @@ class AntiBERTyModelLoader(BaseBERTModelLoader):
             from_pretrained(self._model_path, num_labels=num_labels)
         return model, tokenizer
 
+    @accelerated
     def load_model_for_embeddings(self):
         return self.load_model_for_sequence_classification()
 
@@ -249,6 +269,7 @@ class BALMPairedModelLoader(BaseModelLoader):
         self._model_path = model_path
         self._tokenizer_path = self._model_path
 
+    @accelerated
     def load_model_for_embeddings(self):
         tokenizer = transformers.RobertaTokenizer.from_pretrained(
             self._tokenizer_path)
@@ -257,6 +278,7 @@ class BALMPairedModelLoader(BaseModelLoader):
             self._model_path)
         return model, tokenizer
 
+    @accelerated
     def load_model_for_token_classification(self, num_labels=2):
         tokenizer = transformers.RobertaTokenizer.from_pretrained(
             self._tokenizer_path)
