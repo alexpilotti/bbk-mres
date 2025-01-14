@@ -3,6 +3,7 @@ import logging
 import os
 
 import accelerate
+import torch
 import transformers
 
 import common
@@ -67,6 +68,14 @@ def accelerated(func):
         LOG.info(f"Model device: {model.device}")
         return model, tokenizer
     return wrapper
+
+
+def _get_distributed_model(model):
+    if isinstance(
+            model, torch.nn.parallel.distributed.DistributedDataParallel):
+        return model.module
+    else:
+        return model
 
 
 class BaseModelLoader(metaclass=abc.ABCMeta):
@@ -185,7 +194,7 @@ class ESM2ModelLoader(BaseModelLoader):
         return model_embeddings.ESM2Embeddings(self)
 
     def _get_bare_model(self, model):
-        return model.esm
+        return _get_distributed_model(model).esm
 
 
 class AntiBERTa2ModelLoader(BaseBERTModelLoader):
@@ -208,7 +217,7 @@ class AntiBERTa2ModelLoader(BaseBERTModelLoader):
         return model_embeddings.AntiBERTa2Embeddings(self)
 
     def _get_bare_model(self, model):
-        return model.roformer
+        return _get_distributed_model(model).roformer
 
 
 class AntiBERTyModelLoader(BaseBERTModelLoader):
@@ -258,7 +267,7 @@ class AntiBERTyModelLoader(BaseBERTModelLoader):
         return model_embeddings.AntiBERTyEmbeddings(self)
 
     def _get_bare_model(self, model):
-        return model.bert
+        return _get_distributed_model(model).bert
 
 
 class BALMPairedModelLoader(BaseModelLoader):
@@ -299,7 +308,7 @@ class BALMPairedModelLoader(BaseModelLoader):
         return model_embeddings.BALMPairedEmbeddings(self)
 
     def _get_bare_model(self, model):
-        return model.roberta
+        return _get_distributed_model(model).roberta
 
 
 def get_model_loader(model_name, model_path, use_default_model_tokenizer):
