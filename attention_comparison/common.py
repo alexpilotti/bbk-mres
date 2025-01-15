@@ -25,6 +25,7 @@ _device = None
 
 
 def set_device(device):
+    global _device
     _device = device
 
 
