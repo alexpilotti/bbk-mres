@@ -57,15 +57,15 @@ plot_token_prediction <- function(model_name, is_ft) {
   data <- read_parquet(token_pred_data_path)
 
   df <- data[, (names(data) %in%
-             c("iden_code", "positions_H", "labels", "predicted_labels"))]
+             c("iden_code", "positions", "labels", "predicted_labels"))]
 
   pivoted_df <- df %>%
-    separate_rows(positions_H, labels, predicted_labels, sep = ",") %>%
+    separate_rows(positions, labels, predicted_labels, sep = ",") %>%
     mutate(labels = as.integer(labels),
            predicted_labels = as.integer(predicted_labels))
 
   aggregated_df <- pivoted_df %>%
-    group_by(iden_code, positions_H) %>%
+    group_by(iden_code, positions) %>%
     summarise(
       labels = sum(labels, na.rm = TRUE),
       predicted_labels = sum(predicted_labels, na.rm = TRUE),
@@ -75,7 +75,7 @@ plot_token_prediction <- function(model_name, is_ft) {
   # Fill in missing values
   aggregated_df <- tidyr::complete(
     aggregated_df,
-    positions_H = unique(aggregated_df$positions_H),
+    positions = unique(aggregated_df$positions),
     iden_code = unique(aggregated_df$iden_code)
   )
 
@@ -111,24 +111,24 @@ plot_token_prediction <- function(model_name, is_ft) {
       "binding", "non-binding", "missing"))
 
   # Sort positions by number followed by iCode
-  aggregated_df$positions_H <- factor(
-    aggregated_df$positions_H, levels = mixedsort(
-      unique(aggregated_df$positions_H)))
+  aggregated_df$positions <- factor(
+    aggregated_df$positions, levels = mixedsort(
+      unique(aggregated_df$positions)))
 
-  position_breaks <- levels(aggregated_df$positions_H)[
-    grepl("[A-Z]$", levels(aggregated_df$positions_H)) |
+  position_breaks <- levels(aggregated_df$positions)[
+    grepl("[A-Z]$", levels(aggregated_df$positions)) |
       (suppressWarnings(as.numeric(levels(
-        aggregated_df$positions_H)) %% 5 == 0)) |
-      (suppressWarnings(as.numeric(levels(aggregated_df$positions_H)) == 1))]
+        aggregated_df$positions)) %% 5 == 0)) |
+      (suppressWarnings(as.numeric(levels(aggregated_df$positions)) == 1))]
 
-  position_labels <- sapply(levels(aggregated_df$positions_H), function(x)
+  position_labels <- sapply(levels(aggregated_df$positions), function(x)
     if (x %in% position_breaks)
       x
     else
       "")
 
   p1 <- ggplot(aggregated_df,
-               aes(x = positions_H, y = iden_code, fill = color_labels)) +
+               aes(x = positions, y = iden_code, fill = color_labels)) +
     geom_tile() +
     scale_fill_manual(values = c(
       "binding" = "#ffbe4f",
@@ -156,7 +156,7 @@ plot_token_prediction <- function(model_name, is_ft) {
     )
 
   p2 <- ggplot(aggregated_df,
-               aes(x = positions_H, y = iden_code, fill = color_pred_labels)) +
+               aes(x = positions, y = iden_code, fill = color_pred_labels)) +
     geom_tile() +
     scale_fill_manual(values = c(
       "binding" = "#ffbe4f",
