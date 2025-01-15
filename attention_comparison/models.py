@@ -2,7 +2,6 @@ import abc
 import logging
 import os
 
-import accelerate
 import torch
 import transformers
 
@@ -59,13 +58,13 @@ _DEFAULT_NUM_FROZEN_LAYERS = 3
 def accelerated(func):
     def wrapper(*args, **kwargs):
         model, tokenizer = func(*args, **kwargs)
+
         device = common.get_device()
-        if device:
-            model.to(device)
-        else:
-            accelerator = accelerate.Accelerator()
-            model, tokenizer = accelerator.prepare(model, tokenizer)
+        if not device:
+            device = common.get_best_device()
+        model.to(device)
         LOG.info(f"Model device: {model.device}")
+
         return model, tokenizer
     return wrapper
 
