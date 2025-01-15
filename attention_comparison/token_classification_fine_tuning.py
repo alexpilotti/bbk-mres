@@ -117,7 +117,8 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
         metric_for_best_model="auc",
         lr_scheduler_type='linear',
         seed=common.DEFAULT_SEED,
-        fp16=True
+        fp16=True,
+        auto_find_batch_size=True
     )
 
     tokenized_dataset = _prepare_dataset(
