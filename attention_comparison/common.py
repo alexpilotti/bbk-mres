@@ -34,7 +34,16 @@ def get_device():
 
 
 def get_best_device():
-    return "cuda" if torch.cuda.is_available() else "cpu"
+    if torch.cuda.is_available():
+        device = "cuda"
+        # LOCAL_RANK is set when using DistributedDataParallel
+        local_rank = os.environ.get("LOCAL_RANK")
+        if local_rank and int(local_rank) >= 0:
+            device = f"{device}:{local_rank}"
+    else:
+        device = "cpu"
+
+    return device
 
 
 def set_seed(seed: int = DEFAULT_SEED):
