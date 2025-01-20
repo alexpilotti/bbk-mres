@@ -119,6 +119,14 @@ plot_model_attention_data("ESM2-150M")
 plot_model_attention_data("ESM2-650M")
 ```
 
+```{r ESM2-3B, cache = FALSE}
+plot_model_attention_data("ESM2-3B")
+```
+
+```{r ESM2-15B, cache = FALSE}
+plot_model_attention_data("ESM2-15B")
+```
+
 ```{r ft-ESM2, cache = FALSE}
 plot_model_attention_data("ft-ESM2")
 ```
