@@ -5,7 +5,8 @@ output:
   pdf_document: default
 params:
   chain: "H"
-  region: "FULL"
+  fine_tuning_region: "FULL"
+  predict_region: "FULL"
   data_path: !r file.path(getwd(), "data")
 ---
 ```{r setup, warning = FALSE, message = FALSE, cache = FALSE}
@@ -43,14 +44,16 @@ library(glue)
 ```{r plot_metrics, cache = FALSE}
 plot_metrics <- function(model_name, is_ft) {
   chain <- params$chain
-  region <- params$region
+  fine_tuning_region <- params$fine_tuning_region
+  predict_region <- params$predict_region
   data_path <- params$data_path
 
   ft_pt <- if (is_ft) "FT" else "PT"
 
   json_file <- file.path(
     data_path,
-    glue("token_predict_metrics_{model_name}_{chain}_{region}_{ft_pt}.json"))
+    glue("token_predict_metrics_{model_name}_{chain}_{fine_tuning_region}_",
+         "{predict_region}_{ft_pt}.json"))
 
   json_data <- fromJSON(json_file, flatten = TRUE)
   model_name <- json_data$model_name
@@ -79,7 +82,9 @@ plot_metrics <- function(model_name, is_ft) {
   ggplot(metrics_long, aes(x = metric, y = value, color = metric_type)) +
     geom_point(size = 3) +
     labs(
-      title = glue("{model_name} - {chain} - {region} - {ft_pt}"),
+      title = glue(
+        "{model_name} - {chain} - {fine_tuning_region} - {predict_region} - ",
+        "{ft_pt}"),
       x = "Metric",
       y = "Value",
       color = "Metric Type"
