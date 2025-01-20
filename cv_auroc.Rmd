@@ -3,7 +3,7 @@ output:
   html_document: default
   pdf_document: default
 params:
-  chain: "HL"
+  chain: "H"
   data_path: !r file.path(getwd(), "data")
 ---
 ```{r setup, warning = FALSE, message = FALSE, cache = FALSE}
