@@ -100,6 +100,14 @@ plot_cv_auroc("ESM2-150M")
 plot_cv_auroc("ESM2-650M")
 ```
 
+```{r ESM2-3B, cache = FALSE}
+plot_cv_auroc("ESM2-3B")
+```
+
+```{r ESM2-15B, cache = FALSE}
+plot_cv_auroc("ESM2-15B")
+```
+
 ```{r ft-ESM2, cache = FALSE}
 plot_cv_auroc("ft-ESM2")
 ```
