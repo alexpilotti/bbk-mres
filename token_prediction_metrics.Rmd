@@ -56,7 +56,6 @@ plot_metrics <- function(model_name, is_ft) {
          "{predict_region}_{ft_pt}.json"))
 
   json_data <- fromJSON(json_file, flatten = TRUE)
-  model_name <- json_data$model_name
 
   data <- data.frame(
     model_name = json_data$model_name,
