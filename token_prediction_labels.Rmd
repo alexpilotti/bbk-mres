@@ -7,6 +7,7 @@ params:
   chain: "H"
   fine_tuning_region: "FULL"
   predict_region: "FULL"
+  models: ""
   data_path: !r file.path(getwd(), "data")
 ---
 ```{r setup, warning = FALSE, message = FALSE, cache = FALSE}
@@ -44,6 +45,11 @@ if(!require("tidyr")) {
   install.packages("tidyr")
 }
 library(tidyr)
+
+if(!require("stringr")) {
+  install.packages("stringr")
+}
+library(stringr)
 
 knitr::opts_chunk$set(fig.width=14, fig.height=16)
 ```
@@ -194,52 +200,12 @@ plot_token_prediction <- function(model_name, is_ft) {
 }
 ```
 
-```{r AntiBERTa2, cache = FALSE}
-plot_token_prediction("AntiBERTa2", FALSE)
-plot_token_prediction("AntiBERTa2", TRUE)
-```
+```{r plot_models, cache = FALSE}
+models <- str_split(params$models, ",")[[1]]
 
-```{r AntiBERTy, cache = FALSE}
-plot_token_prediction("AntiBERTy", FALSE)
-plot_token_prediction("AntiBERTy", TRUE)
-```
-
-```{r BALM-paired, cache = FALSE}
-plot_token_prediction("BALM-paired", FALSE)
-plot_token_prediction("BALM-paired", TRUE)
-```
-
-```{r ESM2-8M, cache = FALSE}
-plot_token_prediction("ESM2-8M", FALSE)
-plot_token_prediction("ESM2-8M", TRUE)
-```
-
-```{r ESM2-35M, cache = FALSE}
-plot_token_prediction("ESM2-35M", FALSE)
-plot_token_prediction("ESM2-35M", TRUE)
-```
-
-```{r ESM2-150M, cache = FALSE}
-plot_token_prediction("ESM2-150M", FALSE)
-plot_token_prediction("ESM2-150M", TRUE)
-```
-
-```{r ESM2-650M, cache = FALSE}
-plot_token_prediction("ESM2-650M", FALSE)
-plot_token_prediction("ESM2-650M", TRUE)
-```
-
-```{r ESM2-3B, cache = FALSE}
-plot_token_prediction("ESM2-3B", FALSE)
-plot_token_prediction("ESM2-3B", TRUE)
-```
-
-```{r ESM2-15B, cache = FALSE}
-plot_token_prediction("ESM2-15B", FALSE)
-plot_token_prediction("ESM2-15B", TRUE)
-```
-
-```{r ft-ESM2, cache = FALSE}
-plot_token_prediction("ft-ESM2", FALSE)
-plot_token_prediction("ft-ESM2", TRUE)
+for (model in models) {
+  print(model)
+  plot_token_prediction(model, FALSE)
+  plot_token_prediction(model, TRUE)
+}
 ```
