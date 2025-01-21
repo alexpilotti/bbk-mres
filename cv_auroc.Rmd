@@ -4,6 +4,7 @@ output:
   pdf_document: default
 params:
   chain: "H"
+  models: ""
   data_path: !r file.path(getwd(), "data")
 ---
 ```{r setup, warning = FALSE, message = FALSE, cache = FALSE}
@@ -17,6 +18,11 @@ if(!require("glue")){
   install.packages("glue")
 }
 library(glue)
+
+if(!require("stringr")) {
+  install.packages("stringr")
+}
+library(stringr)
 ```
 
 ```{r plot_cv_auroc, cache = FALSE}
@@ -74,40 +80,12 @@ plot_cv_auroc <- function(model_name) {
 }
 ```
 
-```{r AntiBERTa2, cache = FALSE}
-plot_cv_auroc("AntiBERTa2")
-```
-```{r AntiBERTy, cache = FALSE}
-plot_cv_auroc("AntiBERTy")
-```
-```{r BALM-paired, cache = FALSE}
-plot_cv_auroc("BALM-paired")
-```
+```{r plot_models, cache = FALSE}
+models <- str_split(params$models, ",")[[1]]
 
-```{r ESM2-8M, cache = FALSE}
-plot_cv_auroc("ESM2-8M")
-```
-
-```{r ESM2-35M, cache = FALSE}
-plot_cv_auroc("ESM2-35M")
-```
-
-```{r ESM2-150M, cache = FALSE}
-plot_cv_auroc("ESM2-150M")
-```
-
-```{r ESM2-650M, cache = FALSE}
-plot_cv_auroc("ESM2-650M")
-```
-
-```{r ESM2-3B, cache = FALSE}
-plot_cv_auroc("ESM2-3B")
-```
-
-```{r ESM2-15B, cache = FALSE}
-plot_cv_auroc("ESM2-15B")
-```
-
-```{r ft-ESM2, cache = FALSE}
-plot_cv_auroc("ft-ESM2")
+for (model in models) {
+  print(model)
+  p <- plot_cv_auroc(model)
+  print(p)
+}
 ```
