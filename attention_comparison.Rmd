@@ -4,6 +4,7 @@ output:
   pdf_document: default
 params:
   chain: "H"
+  models: ""
   data_path: !r file.path(getwd(), "data")
 ---
 ```{r setup, warning = FALSE, message = FALSE, cache = FALSE}
@@ -27,6 +28,11 @@ if(!require("glue")){
   install.packages("glue")
 }
 library(glue)
+
+if(!require("stringr")) {
+  install.packages("stringr")
+}
+library(stringr)
 ```
 
 ```{r functions, cache = FALSE}
@@ -91,42 +97,11 @@ plot_model_attention_data <- function(model) {
 }
 ```
 
-```{r AntiBERTa2, cache = FALSE}
-plot_model_attention_data("AntiBERTa2")
-```
+```{r plot_models, cache = FALSE}
+models <- str_split(params$models, ",")[[1]]
 
-```{r AntiBERTy, cache = FALSE}
-plot_model_attention_data("AntiBERTy")
-```
-
-```{r BALM-paired, cache = FALSE}
-plot_model_attention_data("BALM-paired")
-```
-
-```{r ESM2-8M, cache = FALSE}
-plot_model_attention_data("ESM2-8M")
-```
-
-```{r ESM2-35M, cache = FALSE}
-plot_model_attention_data("ESM2-35M")
-```
-
-```{r ESM2-150M, cache = FALSE}
-plot_model_attention_data("ESM2-150M")
-```
-
-```{r ESM2-650M, cache = FALSE}
-plot_model_attention_data("ESM2-650M")
-```
-
-```{r ESM2-3B, cache = FALSE}
-plot_model_attention_data("ESM2-3B")
-```
-
-```{r ESM2-15B, cache = FALSE}
-plot_model_attention_data("ESM2-15B")
-```
-
-```{r ft-ESM2, cache = FALSE}
-plot_model_attention_data("ft-ESM2")
+for (model in models) {
+  print(model)
+  plot_model_attention_data(model)
+}
 ```
