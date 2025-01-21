@@ -7,6 +7,7 @@ params:
   chain: "H"
   fine_tuning_region: "FULL"
   predict_region: "FULL"
+  models: ""
   data_path: !r file.path(getwd(), "data")
 ---
 ```{r setup, warning = FALSE, message = FALSE, cache = FALSE}
@@ -78,7 +79,7 @@ plot_metrics <- function(model_name, is_ft) {
                  names_to = "metric",
                  values_to = "value")
 
-  ggplot(metrics_long, aes(x = metric, y = value, color = metric_type)) +
+  p <- ggplot(metrics_long, aes(x = metric, y = value, color = metric_type)) +
     geom_point(size = 3) +
     labs(
       title = glue(
@@ -92,55 +93,18 @@ plot_metrics <- function(model_name, is_ft) {
     theme(
       plot.title = element_text(hjust = 0.5),
     )
+  p
 }
 ```
 
-```{r AntiBERTa2, cache = FALSE}
-plot_metrics("AntiBERTa2", TRUE)
-plot_metrics("AntiBERTa2", FALSE)
-```
+```{r plot_models, cache = FALSE}
+models <- str_split(params$models, ",")[[1]]
 
-```{r AntiBERTy, cache = FALSE}
-plot_metrics("AntiBERTy", TRUE)
-plot_metrics("AntiBERTy", FALSE)
-```
-
-```{r BALM-paired, cache = FALSE}
-plot_metrics("BALM-paired", TRUE)
-plot_metrics("BALM-paired", FALSE)
-```
-
-```{r ESM-8M, cache = FALSE}
-plot_metrics("ESM2-8M", TRUE)
-plot_metrics("ESM2-8M", FALSE)
-```
-
-```{r ESM-35M, cache = FALSE}
-plot_metrics("ESM2-35M", TRUE)
-plot_metrics("ESM2-35M", FALSE)
-```
-
-```{r ESM-150M, cache = FALSE}
-plot_metrics("ESM2-150M", TRUE)
-plot_metrics("ESM2-150M", FALSE)
-```
-
-```{r ESM-650M, cache = FALSE}
-plot_metrics("ESM2-650M", TRUE)
-plot_metrics("ESM2-650M", FALSE)
-```
-
-```{r ESM-3B, cache = FALSE}
-plot_metrics("ESM2-3B", TRUE)
-plot_metrics("ESM2-3B", FALSE)
-```
-
-```{r ESM-15B, cache = FALSE}
-plot_metrics("ESM2-15B", TRUE)
-plot_metrics("ESM2-15B", FALSE)
-```
-
-```{r ft-ESM2, cache = FALSE}
-plot_metrics("ft-ESM2", TRUE)
-plot_metrics("ft-ESM2", FALSE)
+for (model in models) {
+  p1 <- plot_metrics(model, TRUE)
+  p2 <- plot_metrics(model, FALSE)
+  print(model)
+  print(p1)
+  print(p2)
+}
 ```
