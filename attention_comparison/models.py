@@ -13,6 +13,7 @@ LOG = logging.getLogger(__name__)
 MODEL_BALM_PAIRED = "BALM-paired"
 MODEL_ANTIBERTY = "AntiBERTy"
 MODEL_ANTIBERTA2 = "AntiBERTa2"
+MODEL_ESM1b = "ESM1b"
 MODEL_ESM2_15B = "ESM2-15B"
 MODEL_ESM2_3B = "ESM2-3B"
 MODEL_ESM2_650M = "ESM2-650M"
@@ -24,6 +25,7 @@ MODELS = [
     MODEL_BALM_PAIRED,
     MODEL_ANTIBERTY,
     MODEL_ANTIBERTA2,
+    MODEL_ESM1b,
     MODEL_ESM2_15B,
     MODEL_ESM2_3B,
     MODEL_ESM2_650M,
@@ -33,6 +35,7 @@ MODELS = [
 ]
 
 _DEFAULT_MODEL_HUB_PATHS = {
+    MODEL_ESM1b: "facebook/esm1b_t33_650M_UR50S",
     MODEL_ESM2_15B: "facebook/esm2_t48_15B_UR50D",
     MODEL_ESM2_3B: "facebook/esm2_t36_3B_UR50D",
     MODEL_ESM2_650M: "facebook/esm2_t33_650M_UR50D",
@@ -182,6 +185,7 @@ class BaseBERTModelLoader(BaseModelLoader):
 class ESM2ModelLoader(BaseModelLoader):
     def check_model_name(model_name):
         return model_name in [
+            MODEL_ESM1b,
             MODEL_ESM2_15B,
             MODEL_ESM2_3B,
             MODEL_ESM2_650M,
