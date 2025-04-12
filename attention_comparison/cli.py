@@ -26,7 +26,8 @@ CMD_TOKEN_PREDICT = "token-prediction"
 CMD_REMOVE_SIMILAR_SEQUENCES = "remove-similar-sequences"
 CMD_SHUFFLE = "shuffle"
 CMD_SPLIT_DATA = "split-data"
-CMD_SVM_EMBEDDINGS_PREDICTION = "svm-embeddings-prediction"
+CMD_SVM_EMBEDDINGS_BUILD_MODEL = "svm-embeddings-build-model"
+CMD_SVM_EMBEDDINGS_PREDICTION = "svm-embeddings-predict"
 CMD_UNDERSAMPLE = "undersample"
 
 DEFAULT_MIN_SEQ_ID = 0.9
@@ -202,7 +203,34 @@ def _add_embeddings_args(parser):
         "values")
 
 
+def _add_svm_embeddings_build_model_args(parser):
+    parser.add_argument(
+        "-i", "--input", required=True,
+        type=_valid_file_arg,
+        help="Sequences data in Apache Parquet format path")
+    parser.add_argument(
+        "-e", "--embeddings", required=True,
+        type=_valid_file_arg,
+        help="Path of the embeddings file")
+    parser.add_argument(
+        "-m", "--model-path", required=True,
+        type=pathlib.Path,
+        help="Path of the generated SVM model")
+    parser.add_argument(
+        "-o", "--output", required=False,
+        type=pathlib.Path,
+        help="Path of the predicted metrics file")
+    parser.add_argument(
+        "-l", "--positive-labels", required=False,
+        nargs='+', type=str, default=["1"],
+        help="List of positive labels")
+
+
 def _add_svm_embeddings_prediction_args(parser):
+    parser.add_argument(
+        "-m", "--model-path", required=True,
+        type=_valid_file_arg,
+        help="Path of the SVM model")
     parser.add_argument(
         "-i", "--input", required=True,
         type=_valid_file_arg,
@@ -214,11 +242,7 @@ def _add_svm_embeddings_prediction_args(parser):
     parser.add_argument(
         "-o", "--output", required=True,
         type=pathlib.Path,
-        help="Path of the CSV output file that will contain the score")
-    parser.add_argument(
-        "-l", "--positive-labels", required=False,
-        nargs='+', type=str, default=["1"],
-        help="List of positive labels")
+        help="Path of the predicted metrics file")
 
 
 def _add_remove_similar_sequences_args(parser):
@@ -313,6 +337,11 @@ def _parse_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     _add_common_args(embeddings_parser)
     _add_embeddings_args(embeddings_parser)
+
+    svm_embeddings_build_model_parser = subparsers.add_parser(
+        CMD_SVM_EMBEDDINGS_BUILD_MODEL, help="Build SVM embeddings model",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    _add_svm_embeddings_build_model_args(svm_embeddings_build_model_parser)
 
     svm_embeddings_prediction_parser = subparsers.add_parser(
         CMD_SVM_EMBEDDINGS_PREDICTION, help="SVM embeddings prediction",
@@ -418,9 +447,15 @@ def _process_embeddings_command(args):
     embeddings.save_embeddings(emb, args.output)
 
 
+def _process_svm_embeddings_build_model_command(args):
+    svm_embeddings_prediction.build_model(
+        args.input, args.embeddings, args.positive_labels, args.model_path,
+        args.output)
+
+
 def _process_svm_embeddings_prediction_command(args):
-    svm_embeddings_prediction.compute_prediction(
-        args.input, args.embeddings, args.output, args.positive_labels)
+    svm_embeddings_prediction.predict(
+        args.model_path, args.input, args.embeddings, args.output)
 
 
 def _process_remove_similar_sequences_command(args):
@@ -486,6 +521,8 @@ if __name__ == '__main__':
         _process_shuffle_command(args)
     elif args.command == CMD_SPLIT_DATA:
         _process_split_data_command(args)
+    elif args.command == CMD_SVM_EMBEDDINGS_BUILD_MODEL:
+        _process_svm_embeddings_build_model_command(args)
     elif args.command == CMD_SVM_EMBEDDINGS_PREDICTION:
         _process_svm_embeddings_prediction_command(args)
     elif args.command == CMD_UNDERSAMPLE:
