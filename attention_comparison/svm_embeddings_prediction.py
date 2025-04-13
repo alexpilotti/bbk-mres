@@ -122,6 +122,6 @@ def predict(model_path, data_path, embeddings_path, output_metrics_path):
     prediction = model.predict(X_test)
     prob = model.predict_proba(X_test)[:, -1]
     metrics = _compute_metrics(prediction, prob, y_test)
-
+    LOG.info(f"SVM prediction metrics: {metrics}")
     LOG.info(f"Saving SVM prediction metrics to: {output_metrics_path}")
     common.save_json_file(metrics, output_metrics_path)
