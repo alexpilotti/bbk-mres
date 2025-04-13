@@ -39,13 +39,24 @@ library(stringr)
 data_path <- params$data_path
 
 plot_seq_mean_attention <- function(data_mean, title) {
-  light_chain_start <- 128
+  if("H" %in% params$chain) {
+    xmin <- c(27, 56, 105)
+    xmax <- c(38, 65, 117)
+  } else {
+    xmin <- c()
+    xmax <- c()
+  }
+  if("L" %in% params$chain) {
+    light_chain_start <- 128
+    xmin <- append(xmin, c(27, 56, 105) + light_chain_start)
+    xmax <- append(xmax, c(38, 65, 117) + light_chain_start)
+  }
 
   # CDR1-3 region locations for IMGT taken from:
   # https://www.imgt.org/IMGTScientificChart/Nomenclature/IMGT-FRCDRdefinition.html
   cdr_regions <- data.frame(
-    xmin = append(c(27, 56, 105), c(27, 56, 105) + light_chain_start),
-    xmax = append(c(38, 65, 117), c(38, 65, 117) + light_chain_start),
+    xmin = xmin,
+    xmax = xmax,
     ymin = -Inf,
     ymax = Inf)
 
@@ -54,7 +65,7 @@ plot_seq_mean_attention <- function(data_mean, title) {
               aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
               fill = "grey", alpha = 0.5, inherit.aes = FALSE) +
     geom_line(linetype = "solid") +
-    labs(title = title) +
+    labs(title = title, y = "Mean attention", x = "Sequence") +
     theme_classic()
 
   p
