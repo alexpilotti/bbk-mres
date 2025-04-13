@@ -36,6 +36,8 @@ chain <- params$chain
 
 PT <- "PT"
 FT <- "FT"
+PT_SVM <- "PT_SVM"
+PT_SVM_shuffled <- "PT_SVM_shuffled"
 
 load_json_files <- function(training) {
   metrics <- data.frame()
@@ -46,6 +48,11 @@ load_json_files <- function(training) {
     json_data <- fromJSON(file.path(
       data_path,
       glue("predict_metrics_{model_name}_{chain}_{training}.json")))
+
+    if (!"num_parameters" %in% names(json_data)) {
+      json_data$num_parameters <- NA
+      json_data$test_loss <- NA
+    }
 
     json_data <- data.frame(
       precision = json_data$precision,
@@ -72,6 +79,10 @@ metrics_pt <- load_json_files(PT)
 metrics_ft <- load_json_files(FT)
 metrics <- rbind(metrics_pt, metrics_ft)
 
+metrics_svm <- load_json_files(PT_SVM)
+metrics_svm_shuffle <- load_json_files(PT_SVM_shuffled)
+metrics <- rbind(metrics, metrics_svm, metrics_svm_shuffle)
+
 plot_data <- function(metrics, metric_name) {
   data_range <- max(metrics[metric_name]) - min(metrics[metric_name])
   binwidth_value <- data_range / 30
@@ -96,8 +107,10 @@ plot_data <- function(metrics, metric_name) {
       axis.title.y = element_text(margin = margin(r = 10))
     ) +
     scale_fill_manual(
-      labels = c(FT = "Fine-tuned", PT = "Pre-trained"),
-      values = c(FT = "#00BFC4", PT = "#F8766D")
+      labels = c(FT = "Fine-tuned", PT = "Pre-trained",
+                 PT_SVM = "SVM", PT_SVM_shuffled = "SVM - shuffled"),
+      values = c(FT = "#00BFC4", PT = "#F8766D",
+                 PT_SVM = "#FFD700", PT_SVM_shuffled = "#D3D3D3")
     ) +
     labs(
       title = y_label,
