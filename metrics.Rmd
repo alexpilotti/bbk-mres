@@ -6,6 +6,7 @@ output:
 params:
   chain: "H"
   models: ""
+  include_svm: False
   data_path: !r file.path(getwd(), "data")
 ---
 ```{r setup, warning = FALSE, message = FALSE, cache = FALSE}
@@ -79,9 +80,11 @@ metrics_pt <- load_json_files(PT)
 metrics_ft <- load_json_files(FT)
 metrics <- rbind(metrics_pt, metrics_ft)
 
-metrics_svm <- load_json_files(PT_SVM)
-metrics_svm_shuffle <- load_json_files(PT_SVM_shuffled)
-metrics <- rbind(metrics, metrics_svm, metrics_svm_shuffle)
+if (params$include_svm) {
+  metrics_svm <- load_json_files(PT_SVM)
+  metrics_svm_shuffle <- load_json_files(PT_SVM_shuffled)
+  metrics <- rbind(metrics, metrics_svm, metrics_svm_shuffle)
+}
 
 plot_data <- function(metrics, metric_name) {
   data_range <- max(metrics[metric_name]) - min(metrics[metric_name])
