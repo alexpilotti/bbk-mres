@@ -57,6 +57,11 @@ load_json_files <- function(training, filtered = TRUE) {
       json_data$test_loss <- NA
     }
 
+    if (grepl("ESM", model_name)) {
+      # Simple hack to group ESM models together
+      json_data$num_parameters <- json_data$num_parameters + 1000^4
+    }
+
     json_data <- data.frame(
       precision = json_data$precision,
       recall = json_data$recall,
