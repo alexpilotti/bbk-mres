@@ -98,26 +98,12 @@ plot_token_prediction <- function(model_name, is_ft) {
 
   aggregated_df$pred_labels_diff <- with(
     aggregated_df,
-    ifelse(labels == predicted_labels, labels,
-    ifelse(predicted_labels == 1 & labels != predicted_labels, 2,
-    ifelse(predicted_labels == 0 & labels != predicted_labels, 3,
-    ifelse(predicted_labels == -100 & labels != predicted_labels, 4, NA)))))
-
-  aggregated_df$color_pred_labels_diff <- case_when(
-    aggregated_df$pred_labels_diff == 2 ~ "false-positive",
-    aggregated_df$pred_labels_diff == 3 ~ "false-negative",
-    aggregated_df$pred_labels_diff == 4 ~ "false-missing",
-    aggregated_df$pred_labels_diff == 1 ~ "binding",
-    aggregated_df$pred_labels_diff == 0 ~ "non-binding",
-    aggregated_df$pred_labels_diff < 0 ~ "missing",
-    is.na(aggregated_df$pred_labels_diff) ~ "missing",
-  )
-
-  # Sort legend values
-  aggregated_df$color_pred_labels_diff <- factor(
-    aggregated_df$color_pred_labels_diff, levels = c(
-      "binding", "non-binding", "false-positive",
-      "false-negative", "false-missing", "missing"))
+    ifelse(is.na(labels), -100,
+      ifelse(labels == predicted_labels, labels,
+        ifelse(predicted_labels == 1 & labels != predicted_labels, 2,
+          ifelse(predicted_labels == 0 & labels != predicted_labels, 3,
+            ifelse(predicted_labels == -100 &
+                   labels != predicted_labels, 4, NA))))))
 
   # Sort positions by number followed by iCode
   aggregated_df$positions <- factor(
@@ -138,21 +124,22 @@ plot_token_prediction <- function(model_name, is_ft) {
 
   p <- ggplot(aggregated_df,
                aes(x = positions, y = iden_code,
-                   fill = color_pred_labels_diff)) +
+                   fill = factor(pred_labels_diff,
+                                 levels = c(1, 0, 2, 3, -100)))) +
     geom_tile() +
     scale_fill_manual(values = c(
-        "binding" = "#ffbe4f",
-        "non-binding" = "#0ea7b5",
-        "missing" = "#6bd2db",
-        "false-positive" = "#766df6",
-        "false-negative" = "#f66d6d"
+        "-100" = "#6bd2db",
+        "0" = "#0ea7b5",
+        "1" = "#ffbe4f",
+        "2" = "#766df6",
+        "3" = "#f66d6d"
       ),
       labels = c(
-        binding = "Correct binding prediction",
-        "non-binding" = "Correct non-binding prediction",
-        missing = "Missing sequence position",
-        "false-positive" = "False positive",
-        "false-negative" = "False negative"
+        "-100" = "Missing sequence position",
+        "0" = "Correct non-binding prediction",
+        "1" = "Correct binding prediction",
+        "2" = "False positive",
+        "3" = "False negative"
     )) +
     labs(
       title = glue("Predicted labels - {model_name} - {fine_tuning_region} - ",
