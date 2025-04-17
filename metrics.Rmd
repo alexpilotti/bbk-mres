@@ -7,6 +7,7 @@ params:
   chain: "H"
   models: ""
   include_svm: False
+  include_unfiltered: True
   data_path: !r file.path(getwd(), "data")
 ---
 ```{r setup, warning = FALSE, message = FALSE, cache = FALSE}
@@ -40,15 +41,16 @@ FT <- "FT"
 PT_SVM <- "PT_SVM"
 PT_SVM_shuffled <- "PT_SVM_shuffled"
 
-load_json_files <- function(training) {
+load_json_files <- function(training, filtered = TRUE) {
   metrics <- data.frame()
-
   model_names <- str_split(params$models, ",")[[1]]
+  filtered_str <- ifelse(filtered, "", "_NF")
 
   for (model_name in model_names) {
     json_data <- fromJSON(file.path(
       data_path,
-      glue("predict_metrics_{model_name}_{chain}_{training}.json")))
+      glue(
+        "predict_metrics_{model_name}_{chain}_{training}{filtered_str}.json")))
 
     if (!"num_parameters" %in% names(json_data)) {
       json_data$num_parameters <- NA
@@ -67,7 +69,7 @@ load_json_files <- function(training) {
       test_loss = json_data$test_loss,
       model = model_name,
       num_parameters = json_data$num_parameters,
-      training = training
+      training = glue(training, filtered_str)
     )
 
     metrics <- rbind(metrics, json_data)
@@ -76,14 +78,24 @@ load_json_files <- function(training) {
   return(metrics)
 }
 
-metrics_pt <- load_json_files(PT)
-metrics_ft <- load_json_files(FT)
-metrics <- rbind(metrics_pt, metrics_ft)
+load_data <- function(filtered) {
+  metrics <- data.frame()
 
-if (params$include_svm) {
-  metrics_svm <- load_json_files(PT_SVM)
-  metrics_svm_shuffle <- load_json_files(PT_SVM_shuffled)
-  metrics <- rbind(metrics, metrics_svm, metrics_svm_shuffle)
+  metrics_pt <- load_json_files(PT, filtered)
+  metrics_ft <- load_json_files(FT, filtered)
+  metrics <- rbind(metrics, metrics_pt, metrics_ft)
+
+  if (params$include_svm) {
+    metrics_svm <- load_json_files(PT_SVM, filtered)
+    metrics_svm_shuffle <- load_json_files(PT_SVM_shuffled, filtered)
+    metrics <- rbind(metrics, metrics_svm, metrics_svm_shuffle)
+  }
+  metrics
+}
+
+metrics <- load_data(TRUE)
+if (params$include_unfiltered) {
+  metrics <- rbind(metrics, load_data(FALSE))
 }
 
 plot_data <- function(metrics, metric_name) {
@@ -91,37 +103,50 @@ plot_data <- function(metrics, metric_name) {
   binwidth_value <- data_range / 30
   y_label = tools::toTitleCase(metric_name)
 
-  p <- ggplot(metrics, aes(x = reorder(model, num_parameters),
-                           y = .data[[metric_name]], fill = training)) +
-    geom_dotplot(
-      binaxis = 'y',
-      stackdir = 'center',
-      binwidth = binwidth_value,
-      show.legend = TRUE
-    ) +
-    theme_minimal() +
-    theme(
-      plot.title = element_text(
-        hjust = 0.5,
-        face = "bold",
-        size = 16
-      ),
-      axis.title.x = element_text(margin = margin(t = 10)),
-      axis.title.y = element_text(margin = margin(r = 10))
-    ) +
-    scale_fill_manual(
-      labels = c(FT = "Fine-tuned", PT = "Pre-trained",
-                 PT_SVM = "SVM", PT_SVM_shuffled = "SVM - shuffled"),
-      values = c(FT = "#00BFC4", PT = "#F8766D",
-                 PT_SVM = "#FFD700", PT_SVM_shuffled = "#D3D3D3")
-    ) +
-    labs(
-      title = y_label,
-      x = "Model",
-      y = y_label,
-      fill = "Training"
-    ) +
-    scale_x_discrete(guide = guide_axis(n.dodge = 2))
+  rows_order <- c("FT", "FT_NF", "PT_SVM", "PT_SVM_NF", "PT_SVM_shuffled",
+                  "PT_SVM_shuffled_NF", "PT", "PT_NF")
+
+  p <- ggplot(metrics, aes(x = reorder(model, num_parameters,
+                                       FUN = function(x) mean(x, na.rm = TRUE)),
+                           y = factor(training, levels = rev(rows_order)),
+                           fill = .data[[metric_name]])) +
+  geom_tile(color = "black") +
+  geom_text(aes(label = sprintf("%.2f", .data[[metric_name]])),
+            color = "black", size = 3) +
+  coord_fixed() +
+  scale_fill_gradient(low = "#FFFFBF", high = "#1A9850") +
+  scale_y_discrete(position = "right", labels = c(
+    PT = "Pre-trained",
+    FT = "Fine-tuned",
+    PT_SVM  = "Pre-trained + SVM",
+    PT_SVM_shuffled = "Pre-trained + SVM (shuffled)",
+    PT_NF = "Pre-trained (non clustered)",
+    FT_NF = "Fine-tuned (non clustered)",
+    PT_SVM_NF  = "Pre-trained + SVM (non clustered)",
+    PT_SVM_shuffled_NF = "Pre-trained + SVM (shuffled, non clustered)"
+  )) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(
+      hjust = 0.5,
+      face = "bold",
+      size = 16
+    ),
+    # Needed otherwise the leftmost X text label gets cropped
+    plot.margin = margin(l = 10),
+    axis.title.x = element_text(margin = margin(t = 10)),
+    axis.title.y = element_text(margin = margin(r = 10)),
+    axis.text.x = element_text(color = "black", angle = 45,
+                               hjust = 1, vjust = 1),
+    axis.text.y = element_text(color = "black")
+  ) +
+  labs(
+    title = y_label,
+    x = NULL,
+    y = NULL,
+    fill = NULL
+  )
   p
 }
 ```
