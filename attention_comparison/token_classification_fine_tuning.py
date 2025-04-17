@@ -20,9 +20,13 @@ LR = 1e-5
 # IMGT numbering
 # https://www.imgt.org/IMGTScientificChart/Nomenclature/IMGT-FRCDRdefinition.html
 REGIONS = {
+    "FR1": [1, 26],
     "CDR1": [27, 38],
+    "FR2": [39, 55],
     "CDR2": [56, 65],
-    "CDR3": [105, 118]
+    "FR3": [66, 104],
+    "CDR3": [105, 117],
+    "FR4": [118, 129]
     }
 
 
