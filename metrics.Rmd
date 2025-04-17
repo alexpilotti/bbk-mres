@@ -101,7 +101,7 @@ if (params$include_unfiltered) {
 plot_data <- function(metrics, metric_name) {
   data_range <- max(metrics[metric_name]) - min(metrics[metric_name])
   binwidth_value <- data_range / 30
-  y_label = tools::toTitleCase(metric_name)
+  y_label = tools::toTitleCase(gsub("_", " ", metric_name))
 
   rows_order <- c("FT", "FT_NF", "PT_SVM", "PT_SVM_NF", "PT_SVM_shuffled",
                   "PT_SVM_shuffled_NF", "PT", "PT_NF")
