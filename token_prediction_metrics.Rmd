@@ -51,7 +51,8 @@ plot_metrics <- function(model_name, is_ft) {
   fine_tuning_region <- "FULL"
 
   metrics_all = data.frame()
-  for (predict_region in c("FULL", "CDR1", "CDR2", "CDR3")) {
+  for (predict_region in c("FULL", "FR1", "CDR1", "FR2",
+                           "CDR2", "FR3", "CDR3", "FR4")) {
     json_file <- file.path(
       data_path,
       glue("token_predict_metrics_{model_name}_{chain}_{fine_tuning_region}_",
@@ -83,10 +84,11 @@ plot_metrics <- function(model_name, is_ft) {
     metrics_all <- rbind(metrics_all, metrics_long)
   }
 
-  rows_order <- c("f1-score", "precision", "recall")
+  regions_order <- c("FR1", "CDR1", "FR2", "CDR2", "FR3", "CDR3", "FR4", "FULL")
+  metrics_order <- c("f1-score", "precision", "recall")
 
-  p <- ggplot(metrics_all, aes(x = region,
-                               y = factor(metric, levels = rev(rows_order)),
+  p <- ggplot(metrics_all, aes(x = factor(region, levels = regions_order),
+                               y = factor(metric, levels = rev(metrics_order)),
                                fill = value)) +
     geom_tile(color = "black") +
     geom_text(aes(label = sprintf("%.2f", value)),
