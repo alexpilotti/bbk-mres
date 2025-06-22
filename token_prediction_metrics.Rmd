@@ -41,7 +41,7 @@ library(glue)
 ```
 
 ```{r plot_metrics, cache = FALSE}
-plot_metrics <- function(model_name, is_ft) {
+plot_metrics <- function(model_name, is_ft, metrics_group) {
   chain <- params$chain
   fine_tuning_region <- params$fine_tuning_region
   predict_region <- params$predict_region
@@ -50,9 +50,11 @@ plot_metrics <- function(model_name, is_ft) {
   ft_pt <- if (is_ft) "FT" else "PT"
   fine_tuning_region <- "FULL"
 
+  predict_regions <- c("FULL", "FR1", "CDR1", "FR2",
+                       "CDR2", "FR3", "CDR3", "FR4")
+
   metrics_all = data.frame()
-  for (predict_region in c("FULL", "FR1", "CDR1", "FR2",
-                           "CDR2", "FR3", "CDR3", "FR4")) {
+  for (predict_region in predict_regions) {
     json_file <- file.path(
       data_path,
       glue("token_predict_metrics_{model_name}_{chain}_{fine_tuning_region}_",
@@ -69,7 +71,7 @@ plot_metrics <- function(model_name, is_ft) {
       accuracy = json_data$accuracy
     )
 
-    metrics <- json_data[names(json_data) %in% c("weighted avg")]
+    metrics <- json_data[names(json_data) %in% c(metrics_group)]
     metrics_df <- bind_rows(metrics, .id = "metric_type")
 
     data <- metrics_df %>% bind_cols(data)
@@ -102,8 +104,8 @@ plot_metrics <- function(model_name, is_ft) {
     )) +
     labs(
       title = glue(
-        "{model_name} - {chain} - ",
-        "{ft_pt}"),
+        "{model_name} - {chain} - {stringr::str_to_title(metrics_group)} ",
+        "- {ft_pt}"),
       x = "Region",
       y = NULL,
       fill = NULL
@@ -124,10 +126,12 @@ plot_metrics <- function(model_name, is_ft) {
 models <- str_split(params$models, ",")[[1]]
 
 for (model in models) {
-  p1 <- plot_metrics(model, FALSE)
-  p2 <- plot_metrics(model, TRUE)
   print(model)
-  print(p1)
-  print(p2)
+  for (ft in c(FALSE, TRUE)) {
+    for (metrics_group in c("0", "1", "weighted avg", "macro avg")) {
+      p <- plot_metrics(model, ft, metrics_group)
+      print(p)
+    }
+  }
 }
 ```
