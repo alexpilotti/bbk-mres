@@ -41,7 +41,7 @@ library(glue)
 ```
 
 ```{r plot_metrics, cache = FALSE}
-plot_metrics <- function(model_name, is_ft, metrics_group) {
+load_data <- function(model_name, is_ft) {
   chain <- params$chain
   fine_tuning_region <- params$fine_tuning_region
   predict_region <- params$predict_region
@@ -62,6 +62,15 @@ plot_metrics <- function(model_name, is_ft, metrics_group) {
 
     json_data <- fromJSON(json_file, flatten = TRUE)
 
+    if (!"1" %in% names(json_data)) {
+      json_data[["1"]] <- list(
+        precision  = 0.0,
+        recall     = 0.0,
+        `f1-score` = 0.0,
+        support    = 0.0
+      )
+    }
+
     data <- data.frame(
       model_name = json_data$model_name,
       model_path = ifelse(is.null(json_data$model_path), NA,
@@ -71,27 +80,37 @@ plot_metrics <- function(model_name, is_ft, metrics_group) {
       accuracy = json_data$accuracy
     )
 
-    metrics <- json_data[names(json_data) %in% c(metrics_group)]
-    metrics_df <- bind_rows(metrics, .id = "metric_type")
+    metrics <- json_data[names(json_data) %in% c(
+      "0", "1", "weighted avg", "macro avg")]
+
+    metrics_df <- bind_rows(metrics, .id = "group")
 
     data <- metrics_df %>% bind_cols(data)
 
     metrics_long <- metrics_df %>%
-      select(metric_type, `f1-score`, precision, recall) %>%
-      pivot_longer(cols = c(`f1-score`, precision, recall),
+      select(group, `f1-score`, precision, recall, support) %>%
+      pivot_longer(cols = c(`f1-score`, precision, recall, support),
                    names_to = "metric",
                    values_to = "value")
     metrics_long$region = predict_region
 
     metrics_all <- rbind(metrics_all, metrics_long)
   }
+  metrics_all
+}
+
+plot_metrics <- function(data, model_name, is_ft, metrics_group) {
+  chain <- params$chain
+  ft_pt <- if (is_ft) "FT" else "PT"
+
+  data <- subset(data, group == metrics_group & metric != "support")
 
   regions_order <- c("FR1", "CDR1", "FR2", "CDR2", "FR3", "CDR3", "FR4", "FULL")
-  metrics_order <- c("f1-score", "precision", "recall")
+  metrics_order <- c("f1-score", "precision", "recall", "support")
 
-  p <- ggplot(metrics_all, aes(x = factor(region, levels = regions_order),
-                               y = factor(metric, levels = rev(metrics_order)),
-                               fill = value)) +
+  p <- ggplot(data, aes(x = factor(region, levels = regions_order),
+                        y = factor(metric, levels = rev(metrics_order)),
+                        fill = value)) +
     geom_tile(color = "black") +
     geom_text(aes(label = sprintf("%.2f", value)),
               color = "black", size = 3) +
@@ -106,7 +125,48 @@ plot_metrics <- function(model_name, is_ft, metrics_group) {
       title = glue(
         "{model_name} - {chain} - {stringr::str_to_title(metrics_group)} ",
         "- {ft_pt}"),
-      x = "Region",
+      x = NULL,
+      y = NULL,
+      fill = NULL
+    ) +
+    theme_minimal() +
+    theme(
+      legend.position = "none",
+      plot.title = element_text(hjust = 0.5),
+      panel.grid = element_blank(),
+      axis.text.x = element_text(color = "black"),
+      axis.text.y = element_text(color = "black")
+    )
+  p
+}
+
+plot_support <- function(data, model_name, is_ft) {
+  chain <- params$chain
+  ft_pt <- if (is_ft) "FT" else "PT"
+
+  regions_order <- c("FR1", "CDR1", "FR2", "CDR2", "FR3", "CDR3", "FR4", "FULL")
+  groups = c("1", "0", "weighted avg")
+
+  data = subset(data, metric == "support" & group %in% groups)
+
+  p <- ggplot(data, aes(x = factor(region, levels = regions_order),
+                        y = factor(group, levels = rev(groups)),
+                        fill = value)) +
+    geom_tile(color = "black") +
+    geom_text(aes(label = sprintf("%.0f", value)),
+              color = "black", size = 3) +
+    coord_fixed() +
+    scale_fill_gradient(low = "#deebf7", high = "#3182bd") +
+    scale_y_discrete(position = "left", labels = c(
+      "0" = "Non-binding",
+      "1" = "Binding",
+      "weighted avg" = "Total"
+    )) +
+    labs(
+      title = glue(
+        "{model_name} - {chain} - {stringr::str_to_title(metrics_group)} ",
+        "- {ft_pt} - Support"),
+      x = NULL,
       y = NULL,
       fill = NULL
     ) +
@@ -127,11 +187,14 @@ models <- str_split(params$models, ",")[[1]]
 
 for (model in models) {
   print(model)
-  for (ft in c(FALSE, TRUE)) {
+  for (ft in c(TRUE, FALSE)) {
+    data <- load_data(model, ft)
     for (metrics_group in c("0", "1", "weighted avg", "macro avg")) {
-      p <- plot_metrics(model, ft, metrics_group)
+      p <- plot_metrics(data, model, ft, metrics_group)
       print(p)
     }
+    p <- plot_support(data, model, ft)
+    print(p)
   }
 }
 ```
