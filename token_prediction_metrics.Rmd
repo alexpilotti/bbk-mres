@@ -85,8 +85,6 @@ load_data <- function(model_name, is_ft) {
 
     metrics_df <- bind_rows(metrics, .id = "group")
 
-    data <- metrics_df %>% bind_cols(data)
-
     metrics_long <- metrics_df %>%
       select(group, `f1-score`, precision, recall, support) %>%
       pivot_longer(cols = c(`f1-score`, precision, recall, support),
@@ -95,6 +93,12 @@ load_data <- function(model_name, is_ft) {
     metrics_long$region = predict_region
 
     metrics_all <- rbind(metrics_all, metrics_long)
+
+    new_row <- data.frame(group = "global",
+                          metric = "accuracy",
+                          value = data$accuracy,
+                          region = predict_region)
+    metrics_all <- rbind(metrics_all, new_row)
   }
   metrics_all
 }
@@ -106,7 +110,7 @@ plot_metrics <- function(data, model_name, is_ft, metrics_group) {
   data <- subset(data, group == metrics_group & metric != "support")
 
   regions_order <- c("FR1", "CDR1", "FR2", "CDR2", "FR3", "CDR3", "FR4", "FULL")
-  metrics_order <- c("f1-score", "precision", "recall", "support")
+  metrics_order <- c("f1-score", "precision", "recall", "accuracy")
 
   p <- ggplot(data, aes(x = factor(region, levels = regions_order),
                         y = factor(metric, levels = rev(metrics_order)),
@@ -119,7 +123,8 @@ plot_metrics <- function(data, model_name, is_ft, metrics_group) {
     scale_y_discrete(position = "left", labels = c(
       "f1-score" = "F1",
       "recall" = "Recall",
-      "precision" = "Precision"
+      "precision" = "Precision",
+      "accuracy" = "Accuracy"
     )) +
     labs(
       title = glue(
@@ -164,8 +169,7 @@ plot_support <- function(data, model_name, is_ft) {
     )) +
     labs(
       title = glue(
-        "{model_name} - {chain} - {stringr::str_to_title(metrics_group)} ",
-        "- {ft_pt} - Support"),
+        "{model_name} - {chain} - {ft_pt} - Support"),
       x = NULL,
       y = NULL,
       fill = NULL
@@ -189,7 +193,8 @@ for (model in models) {
   print(model)
   for (ft in c(TRUE, FALSE)) {
     data <- load_data(model, ft)
-    for (metrics_group in c("0", "1", "weighted avg", "macro avg")) {
+
+    for (metrics_group in c("0", "1", "weighted avg", "macro avg", "global")) {
       p <- plot_metrics(data, model, ft, metrics_group)
       print(p)
     }
