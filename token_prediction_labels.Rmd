@@ -67,6 +67,9 @@ plot_token_prediction <- function(model_name, is_ft) {
     data_path,
     glue("token_prediction_{model_name}_{chain}_{fine_tuning_region}_",
          "{predict_region}_{ft_pt}.parquet"))
+
+  if(!file.exists(token_pred_data_path)) return()
+
   data <- read_parquet(token_pred_data_path)
 
   df <- data[, (names(data) %in%
