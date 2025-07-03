@@ -60,6 +60,8 @@ load_data <- function(model_name, is_ft) {
       glue("token_predict_metrics_{model_name}_{chain}_{fine_tuning_region}_",
            "{predict_region}_{ft_pt}.json"))
 
+    if(!file.exists(json_file)) next
+
     json_data <- fromJSON(json_file, flatten = TRUE)
 
     if (!"1" %in% names(json_data)) {
@@ -193,6 +195,7 @@ for (model in models) {
   print(model)
   for (ft in c(TRUE, FALSE)) {
     data <- load_data(model, ft)
+    if(nrow(data) == 0) next
 
     for (metrics_group in c("0", "1", "weighted avg", "macro avg", "global")) {
       p <- plot_metrics(data, model, ft, metrics_group)
