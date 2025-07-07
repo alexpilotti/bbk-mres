@@ -34,18 +34,18 @@ def _compute_metrics(p):
     predictions, labels = p
     predictions = np.argmax(predictions, axis=2)
 
-    true_predictions = []
-    true_labels = []
+    preds = []
+    labs = []
 
     for prediction, label in zip(predictions, labels):
         for pred, lab in zip(prediction, label):
             if lab != -100:  # Exclude special tokens
-                true_predictions.append(pred)
-                true_labels.append(lab)
+                preds.append(pred)
+                labs.append(lab)
 
     report = metrics.classification_report(
-        y_true=true_labels,
-        y_pred=true_predictions,
+        y_true=labs,
+        y_pred=preds,
         zero_division=0,
         digits=4,
         output_dict=True
