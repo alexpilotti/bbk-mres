@@ -79,7 +79,8 @@ load_data <- function(model_name, is_ft) {
                           json_data$model_path),
       num_parameters = json_data$num_parameters,
       test_loss = json_data$test_loss,
-      accuracy = json_data$accuracy
+      accuracy = json_data$accuracy,
+      balanced_accuracy = json_data$balanced_accuracy
     )
 
     metrics <- json_data[names(json_data) %in% c(
@@ -101,6 +102,12 @@ load_data <- function(model_name, is_ft) {
                           value = data$accuracy,
                           region = predict_region)
     metrics_all <- rbind(metrics_all, new_row)
+
+    new_row <- data.frame(group = "global",
+                          metric = "balanced_accuracy",
+                          value = data$balanced_accuracy,
+                          region = predict_region)
+    metrics_all <- rbind(metrics_all, new_row)
   }
   metrics_all
 }
@@ -112,7 +119,8 @@ plot_metrics <- function(data, model_name, is_ft, metrics_group) {
   data <- subset(data, group == metrics_group & metric != "support")
 
   regions_order <- c("FR1", "CDR1", "FR2", "CDR2", "FR3", "CDR3", "FR4", "FULL")
-  metrics_order <- c("f1-score", "precision", "recall", "accuracy")
+  metrics_order <- c("f1-score", "precision", "recall", "accuracy",
+                     "balanced_accuracy")
 
   p <- ggplot(data, aes(x = factor(region, levels = regions_order),
                         y = factor(metric, levels = rev(metrics_order)),
@@ -126,7 +134,8 @@ plot_metrics <- function(data, model_name, is_ft, metrics_group) {
       "f1-score" = "F1",
       "recall" = "Recall",
       "precision" = "Precision",
-      "accuracy" = "Accuracy"
+      "accuracy" = "Accuracy",
+      "balanced_accuracy" = "Balanced Accuracy"
     )) +
     labs(
       title = glue(
