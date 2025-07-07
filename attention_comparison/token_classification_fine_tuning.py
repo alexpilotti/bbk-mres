@@ -51,6 +51,8 @@ def _compute_metrics(p):
         output_dict=True
     )
 
+    report["balanced_accuracy"] = metrics.balanced_accuracy_score(labs, preds)
+
     return report
 
 
