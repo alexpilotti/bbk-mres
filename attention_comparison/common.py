@@ -66,6 +66,11 @@ def specificity(y_true, y_pred):
     return tn / (tn + fp)
 
 
+def false_positive_rate(y_true, y_pred):
+    tn, fp, _, _ = metrics.confusion_matrix(y_true, y_pred).ravel()
+    return fp / (fp + tn)
+
+
 def format_label_counts(data):
     counts = data[LABEL_COL_NAME].value_counts(normalize=True) * 100
     counts = counts.apply(lambda x: '{:,.2f} %'.format(x))

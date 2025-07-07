@@ -45,6 +45,7 @@ def _compute_metrics(preds, probs, labs):
         "auc": metrics.roc_auc_score(labs, probs),
         "mcc": metrics.matthews_corrcoef(labs, preds),
         "specificity": common.specificity(labs, preds),
+        "fpr": common.false_positive_rate(labs, preds),
     }
 
 
