@@ -33,13 +33,17 @@ REGIONS = {
 def _compute_metrics(p):
     predictions, labels = p
     preds = np.argmax(predictions, axis=2)
+    probs = torch.softmax(torch.from_numpy(predictions),
+                          dim=1).detach().numpy()[:, -1]
 
+    probs_filtered = []
     preds_filtered = []
     labs_filtered = []
 
-    for prediction, label in zip(preds, labels):
-        for pred, lab in zip(prediction, label):
+    for probability, prediction, label in zip(probs, preds, labels):
+        for prob, pred, lab in zip(probability, prediction, label):
             if lab != -100:  # Exclude special tokens
+                probs_filtered.append(prob)
                 preds_filtered.append(pred)
                 labs_filtered.append(lab)
 
@@ -51,8 +55,18 @@ def _compute_metrics(p):
         output_dict=True
     )
 
+    if len(set(labs_filtered)) > 1:
+        # AUC is undefined if there's a single class
+        auc = metrics.roc_auc_score(labs_filtered, probs_filtered)
+    else:
+        auc = 0
+
+    report["apr"] = metrics.average_precision_score(
+        labs_filtered, probs_filtered, pos_label=1)
     report["balanced_accuracy"] = metrics.balanced_accuracy_score(
         labs_filtered, preds_filtered)
+    report["auc"] = auc
+    report["mcc"] = metrics.matthews_corrcoef(labs_filtered, preds_filtered)
 
     return report
 
