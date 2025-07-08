@@ -32,26 +32,27 @@ REGIONS = {
 
 def _compute_metrics(p):
     predictions, labels = p
-    predictions = np.argmax(predictions, axis=2)
+    preds = np.argmax(predictions, axis=2)
 
-    preds = []
-    labs = []
+    preds_filtered = []
+    labs_filtered = []
 
-    for prediction, label in zip(predictions, labels):
+    for prediction, label in zip(preds, labels):
         for pred, lab in zip(prediction, label):
             if lab != -100:  # Exclude special tokens
-                preds.append(pred)
-                labs.append(lab)
+                preds_filtered.append(pred)
+                labs_filtered.append(lab)
 
     report = metrics.classification_report(
-        y_true=labs,
-        y_pred=preds,
+        y_true=labs_filtered,
+        y_pred=preds_filtered,
         zero_division=0,
         digits=4,
         output_dict=True
     )
 
-    report["balanced_accuracy"] = metrics.balanced_accuracy_score(labs, preds)
+    report["balanced_accuracy"] = metrics.balanced_accuracy_score(
+        labs_filtered, preds_filtered)
 
     return report
 
