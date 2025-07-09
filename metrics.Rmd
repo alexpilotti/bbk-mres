@@ -8,6 +8,7 @@ params:
   models: ""
   include_svm: False
   include_unfiltered: True
+  include_averages: True
   data_path: !r file.path(getwd(), "data")
 ---
 ```{r setup, warning = FALSE, message = FALSE, cache = FALSE}
@@ -30,6 +31,11 @@ if(!require("glue")){
   install.packages("glue")
 }
 library(glue)
+
+if(!require("dplyr")){
+  install.packages("dplyr")
+}
+library(dplyr)
 ```
 
 ```{r functions, cache = FALSE}
@@ -99,9 +105,27 @@ load_data <- function(filtered) {
   metrics
 }
 
+compute_averages <- function(metrics) {
+   # Set a high number to plot the AVG column after all models
+  avg_num_parameters <- 1e100
+  df_avg <-
+      metrics %>%
+        group_by(training) %>%
+        summarise(across(where(is.numeric) & !num_parameters,
+                         ~ mean(.x, na.rm = TRUE)),
+                  .groups = "drop") %>%
+        mutate(model = "AVG", num_parameters = avg_num_parameters)
+  df_avg
+}
+
 metrics <- load_data(TRUE)
 if (params$include_unfiltered) {
   metrics <- rbind(metrics, load_data(FALSE))
+}
+
+if (params$include_averages) {
+  metrics_avg <- compute_averages(metrics)
+  metrics <- bind_rows(metrics, metrics_avg)
 }
 
 plot_data <- function(metrics, metric_name) {
