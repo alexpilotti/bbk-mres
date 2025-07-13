@@ -5,6 +5,7 @@ output:
 params:
   chain: "H"
   models: ""
+  models_per_row: 5
   data_path: !r file.path(getwd(), "data")
 ---
 ```{r setup, warning = FALSE, message = FALSE, cache = FALSE}
@@ -33,6 +34,16 @@ if(!require("stringr")) {
   install.packages("stringr")
 }
 library(stringr)
+
+if(!require("patchwork")) {
+  install.packages("patchwork")
+}
+library(patchwork)
+
+if(!require("rlist")) {
+  install.packages("rlist")
+}
+library(rlist)
 ```
 
 ```{r functions, cache = FALSE}
@@ -102,17 +113,68 @@ plot_model_attention_data <- function(model) {
   p2 <- plot_seq_mean_attention(data$pt_mean, glue("PT: {model}"))
   p3 <- plot_seq_mean_attention(data$mean, glue("FT - PT: {model}"))
 
-  print(p1)
-  print(p2)
-  print(p3)
+  list(ft = p1, pt = p2, ft_pt = p3)
+}
+
+set_plots_for_grid <- function(p, models_per_row, i) {
+  p$ft <- p$ft + labs(title = model, x = NULL) +
+    theme(plot.title = element_text(size = 10),
+          axis.title.y = element_text(size = 8))
+  p$pt <- p$pt + labs(title = NULL, x = NULL) +
+    theme(axis.title.y = element_text(size = 8))
+  p$ft_pt <- p$ft_pt + labs(title = NULL, x = "Sequence") +
+    theme(axis.title.x = element_text(size = 8),
+          axis.title.y = element_text(size = 8))
+
+  if (i %% models_per_row == 0) {
+    p$ft <- p$ft + labs(y = "Mean attention (FT)")
+    p$pt <- p$pt + labs(y = "Mean attention (PT)")
+    p$ft_pt <- p$ft_pt + labs(y = "Mean attention (FT-PT)")
+  } else {
+    p$ft <- p$ft + labs(y = NULL)
+    p$pt <- p$pt + labs(y = NULL)
+    p$ft_pt <- p$ft_pt + labs(y = NULL)
+  }
+
+  p
+}
+
+print_plot_grid <- function(plots, num_plot_groups) {
+  for (i in 1:num_plot_groups) {
+    pg = plots[[i]]
+
+    row1 <- lapply(pg, `[[`, "ft") |> wrap_plots(ncol = length(pg))
+    row2 <- lapply(pg, `[[`, "pt") |> wrap_plots(ncol = length(pg))
+    row3 <- lapply(pg, `[[`, "ft_pt") |> wrap_plots(ncol = length(pg))
+
+    plot_grid <- row1 / row2 / row3
+    print(plot_grid)
+  }
 }
 ```
 
 ```{r plot_models, cache = FALSE}
 models <- str_split(params$models, ",")[[1]]
 
+models_per_row <- params$models_per_row
+num_plot_groups <- ceiling(length(models) / models_per_row)
+plots <- replicate(num_plot_groups, list(), simplify = FALSE)
+
+i <- 0
 for (model in models) {
   print(model)
-  plot_model_attention_data(model)
+  p <- plot_model_attention_data(model)
+  print(p$ft)
+  print(p$pt)
+  print(p$ft_pt)
+
+  p <- set_plots_for_grid(p, models_per_row, i)
+
+  j <- floor(i / models_per_row) + 1
+  plots[[j]] <- list.append(plots[[j]], p)
+
+  i <- i + 1
 }
+
+print_plot_grid(plots, num_plot_groups)
 ```
