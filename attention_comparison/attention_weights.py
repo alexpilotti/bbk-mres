@@ -15,7 +15,12 @@ LOG = logging.getLogger(__name__)
 def get_sequences(data_path, chain, indexes=None, max_sequences=None):
     data = pd.read_parquet(data_path)
     if not indexes:
+        # Only binding sequences
+        data = data[data[common.LABEL_COL_NAME] == 1]
         indexes = data.index[:max_sequences]
+
+    if not len(indexes):
+        raise Exception("No sequences selected")
 
     sequences = []
     for index in indexes:
