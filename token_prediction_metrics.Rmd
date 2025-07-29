@@ -84,7 +84,7 @@ load_data <- function(model_name, is_ft) {
       apr = json_data$apr,
       auc = if (!is.null(json_data$auc)) json_data$auc else 0,
       mcc = json_data$mcc,
-      fpr = if (!is.null(json_data$fpr)) json_data$fpr else 0
+      fpr = json_data$fpr
     )
 
     metrics <- json_data[names(json_data) %in% c(
