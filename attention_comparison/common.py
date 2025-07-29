@@ -61,14 +61,20 @@ def save_json_file(data, path, indent=4):
         json.dump(data, f, indent=indent)
 
 
+def _check_single_label(y_true, y_pred):
+    return len(set(y_true)) == 1 and y_true == y_pred
+
+
 def specificity(y_true, y_pred):
-    tn, fp, _, _ = metrics.confusion_matrix(y_true, y_pred).ravel()
-    return tn / (tn + fp)
+    if not _check_single_label(y_true, y_pred):
+        tn, fp, _, _ = metrics.confusion_matrix(y_true, y_pred).ravel()
+        return tn / (tn + fp)
 
 
 def false_positive_rate(y_true, y_pred):
-    tn, fp, _, _ = metrics.confusion_matrix(y_true, y_pred).ravel()
-    return fp / (fp + tn)
+    if not _check_single_label(y_true, y_pred):
+        tn, fp, _, _ = metrics.confusion_matrix(y_true, y_pred).ravel()
+        return fp / (fp + tn)
 
 
 def format_label_counts(data):
