@@ -62,12 +62,14 @@ def save_json_file(data, path, indent=4):
 
 
 def specificity(y_true, y_pred):
-    tn, fp, _, _ = metrics.confusion_matrix(y_true, y_pred).ravel()
+    tn, fp, _, _ = metrics.confusion_matrix(
+        y_true, y_pred, labels=[0, 1]).ravel()
     return tn / (tn + fp)
 
 
 def false_positive_rate(y_true, y_pred):
-    tn, fp, _, _ = metrics.confusion_matrix(y_true, y_pred).ravel()
+    tn, fp, _, _ = metrics.confusion_matrix(
+        y_true, y_pred, labels=[0, 1]).ravel()
     return fp / (fp + tn)
 
 
