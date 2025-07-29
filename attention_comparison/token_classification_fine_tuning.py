@@ -32,20 +32,15 @@ REGIONS = {
 
 def _compute_metrics(p):
     predictions, labels = p
-    preds = np.argmax(predictions, axis=2)
-    probs = torch.softmax(torch.from_numpy(predictions),
-                          dim=1).detach().numpy()[:, -1]
 
-    probs_filtered = []
-    preds_filtered = []
-    labs_filtered = []
+    labels = torch.tensor(labels)
+    probs = torch.softmax(torch.tensor(predictions), dim=-1)
+    preds = torch.argmax(probs, dim=-1)
 
-    for probability, prediction, label in zip(probs, preds, labels):
-        for prob, pred, lab in zip(probability, prediction, label):
-            if lab != -100:  # Exclude special tokens
-                probs_filtered.append(prob)
-                preds_filtered.append(pred)
-                labs_filtered.append(lab)
+    mask = labels != -100
+    probs_filtered = probs[mask][:, 1].numpy()
+    preds_filtered = preds[mask].numpy()
+    labs_filtered = labels[mask].numpy()
 
     report = metrics.classification_report(
         y_true=labs_filtered,
