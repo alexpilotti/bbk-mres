@@ -82,7 +82,7 @@ load_data <- function(model_name, is_ft) {
       accuracy = json_data$accuracy,
       balanced_accuracy = json_data$balanced_accuracy,
       apr = json_data$apr,
-      auc = json_data$auc,
+      auc = if (!is.null(json_data$auc)) json_data$auc else 0,
       mcc = json_data$mcc,
       fpr = if (!is.null(json_data$fpr)) json_data$fpr else 0
     )
