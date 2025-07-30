@@ -84,7 +84,8 @@ load_data <- function(model_name, is_ft) {
       apr = json_data$apr,
       auc = if (!is.null(json_data$auc)) json_data$auc else 0,
       mcc = json_data$mcc,
-      fpr = json_data$fpr
+      fpr = json_data$fpr,
+      f1_weighted = json_data$f1_weighted
     )
 
     metrics <- json_data[names(json_data) %in% c(
@@ -102,7 +103,7 @@ load_data <- function(model_name, is_ft) {
     metrics_all <- rbind(metrics_all, metrics_long)
 
     for(metric in c("accuracy", "balanced_accuracy",
-                    "apr", "auc", "mcc", "fpr")) {
+                    "apr", "auc", "mcc", "fpr", "f1_weighted")) {
       new_row <- data.frame(group = "global",
                             metric = metric,
                             value = data[[metric]],
@@ -121,7 +122,8 @@ plot_metrics <- function(data, model_name, is_ft, metrics_group) {
 
   regions_order <- c("FR1", "CDR1", "FR2", "CDR2", "FR3", "CDR3", "FR4", "FULL")
   metrics_order <- c("f1-score", "precision", "recall", "accuracy",
-                     "balanced_accuracy", "apr", "auc", "mcc", "fpr")
+                     "balanced_accuracy", "apr", "auc", "mcc", "fpr",
+                     "f1_weighted")
 
   p <- ggplot(data, aes(x = factor(region, levels = regions_order),
                         y = factor(metric, levels = rev(metrics_order)),
@@ -140,7 +142,8 @@ plot_metrics <- function(data, model_name, is_ft, metrics_group) {
       "apr" = "APR",
       "auc" = "AUC",
       "mcc" = "MCC",
-      "fpr" = "FPR"
+      "fpr" = "FPR",
+      "f1_weighted" = "F1 Weighted"
     )) +
     labs(
       title = glue(
