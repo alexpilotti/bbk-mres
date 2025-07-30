@@ -63,6 +63,8 @@ def _compute_metrics(p):
     report["auc"] = auc
     report["mcc"] = metrics.matthews_corrcoef(labs_filtered, preds_filtered)
     report["fpr"] = common.false_positive_rate(labs_filtered, preds_filtered)
+    report["f1_weighted"] = metrics.f1_score(
+        labs_filtered, preds_filtered, average="weighted")
 
     return report
 
