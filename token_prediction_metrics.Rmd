@@ -41,6 +41,19 @@ library(glue)
 ```
 
 ```{r plot_metrics, cache = FALSE}
+add_mean_value <- function(metrics_all, columns, mean_region_name) {
+  metrics_all <- metrics_all %>%
+    filter(region %in% columns) %>%
+    group_by(group, metric) %>%
+    summarise(
+      value = mean(value, na.rm = TRUE),
+      region = mean_region_name,
+      .groups = "drop"
+    ) %>%
+    bind_rows(metrics_all, .)
+  metrics_all
+}
+
 load_data <- function(model_name, is_ft) {
   chain <- params$chain
   fine_tuning_region <- params$fine_tuning_region
@@ -111,6 +124,15 @@ load_data <- function(model_name, is_ft) {
       metrics_all <- rbind(metrics_all, new_row)
     }
   }
+
+  if(nrow(metrics_all) > 0) {
+    metrics_all <- add_mean_value(metrics_all,
+                                  c("CDR1", "CDR2", "CDR3"),
+                                  "CDRm")
+    metrics_all <- add_mean_value(metrics_all,
+                                  c("FR1", "FR2", "FR3", "FR4"),
+                                  "FRm")
+  }
   metrics_all
 }
 
@@ -120,7 +142,8 @@ plot_metrics <- function(data, model_name, is_ft, metrics_group) {
 
   data <- subset(data, group == metrics_group & metric != "support")
 
-  regions_order <- c("FR1", "CDR1", "FR2", "CDR2", "FR3", "CDR3", "FR4", "FULL")
+  regions_order <- c("FR1", "CDR1", "FR2", "CDR2", "FR3", "CDR3", "FR4", "FULL",
+                     "CDRm", "FRm")
   metrics_order <- c("f1-score", "precision", "recall", "accuracy",
                      "balanced_accuracy", "apr", "auc", "mcc", "fpr",
                      "f1_weighted")
@@ -168,7 +191,8 @@ plot_support <- function(data, model_name, is_ft) {
   chain <- params$chain
   ft_pt <- if (is_ft) "FT" else "PT"
 
-  regions_order <- c("FR1", "CDR1", "FR2", "CDR2", "FR3", "CDR3", "FR4", "FULL")
+  regions_order <- c("FR1", "CDR1", "FR2", "CDR2", "FR3", "CDR3", "FR4", "FULL",
+                     "CDRm", "FRm")
   groups = c("1", "0", "weighted avg")
 
   data = subset(data, metric == "support" & group %in% groups)
