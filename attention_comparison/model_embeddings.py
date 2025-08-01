@@ -10,7 +10,7 @@ import common
 
 ANTIBERTA2_BATCH_SIZE = 128
 ANTIBERTY_BATCH_SIZE = 500
-BLAM_PAIRED_BATCH_SIZE = 64
+BALM_BATCH_SIZE = 64
 ESM2_BATCH_SIZE = 50
 
 LOG = logging.getLogger(__name__)
@@ -121,6 +121,6 @@ class AntiBERTa2Embeddings(ESM2Embeddings):
         return ANTIBERTA2_BATCH_SIZE
 
 
-class BALMPairedEmbeddings(BaseEmbeddigs):
+class BALMEmbeddings(BaseEmbeddigs):
     def _get_batch_size(self):
-        return BLAM_PAIRED_BATCH_SIZE
+        return BALM_BATCH_SIZE

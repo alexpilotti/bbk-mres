@@ -11,6 +11,7 @@ import model_embeddings
 LOG = logging.getLogger(__name__)
 
 MODEL_BALM_PAIRED = "BALM-paired"
+MODEL_BALM_UNPAIRED = "BALM-unpaired"
 MODEL_ANTIBERTY = "AntiBERTy"
 MODEL_ANTIBERTA2 = "AntiBERTa2"
 MODEL_ESM1b = "ESM1b"
@@ -23,6 +24,7 @@ MODEL_ESM2_8M = "ESM2-8M"
 
 MODELS = [
     MODEL_BALM_PAIRED,
+    MODEL_BALM_UNPAIRED,
     MODEL_ANTIBERTY,
     MODEL_ANTIBERTA2,
     MODEL_ESM1b,
@@ -50,7 +52,6 @@ MODEL_TYPE_MASKED_LM = 2
 
 _ANTIBERTA2_MAX_LENGTH = 256
 _ANTIBERTY_MAX_LENGTH = 512 - 2
-_BALM_MAX_LENGTH = 512 - 2
 # Note(alexpilotti): didn't find any resource validating a max length for ESM2,
 # expect discussions suggesting to limit it to 1024
 _ESM2_MAX_LENGTH = 512
@@ -278,9 +279,9 @@ class AntiBERTyModelLoader(BaseBERTModelLoader):
         return _get_distributed_model(model).bert
 
 
-class BALMPairedModelLoader(BaseModelLoader):
+class BALMModelLoader(BaseModelLoader):
     def check_model_name(model_name):
-        return model_name == MODEL_BALM_PAIRED
+        return model_name in [MODEL_BALM_PAIRED, MODEL_BALM_UNPAIRED]
 
     def _set_model_paths(self, model_name, model_path,
                          use_default_model_tokenizer):
@@ -309,11 +310,8 @@ class BALMPairedModelLoader(BaseModelLoader):
             self._model_path)
         return model, tokenizer
 
-    def get_max_length(self):
-        return _BALM_MAX_LENGTH
-
     def _get_model_embeddings(self):
-        return model_embeddings.BALMPairedEmbeddings(self)
+        return model_embeddings.BALMEmbeddings(self)
 
     def _get_bare_model(self, model):
         return _get_distributed_model(model).roberta
@@ -322,7 +320,7 @@ class BALMPairedModelLoader(BaseModelLoader):
 def get_model_loader(model_name, model_path, use_default_model_tokenizer):
     MODEL_LOADERS = [AntiBERTa2ModelLoader,
                      AntiBERTyModelLoader,
-                     BALMPairedModelLoader,
+                     BALMModelLoader,
                      ESM2ModelLoader]
 
     for model_loader_class in MODEL_LOADERS:
