@@ -164,7 +164,7 @@ plot_data <- function(metrics, metric_name) {
       size = 16
     ),
     # Needed otherwise the leftmost X text label gets cropped
-    plot.margin = margin(l = 10),
+    plot.margin = margin(l = 20),
     axis.title.x = element_text(margin = margin(t = 10)),
     axis.title.y = element_text(margin = margin(r = 10)),
     axis.text.x = element_text(color = "black", angle = 45,
