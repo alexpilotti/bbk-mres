@@ -438,7 +438,7 @@ def _process_attentions_command(args):
 
 def _process_embeddings_command(args):
     common.set_device(args.device)
-    sequences = attention_weights.get_sequences(
+    sequences = embeddings.get_sequences(
         args.input, args.chain, args.sequence_indexes)
 
     emb = embeddings.get_embeddings(
