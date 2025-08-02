@@ -150,9 +150,11 @@ class BaseModelLoader(metaclass=abc.ABCMeta):
         return self._get_model_embeddings().get_embeddings(
             formatted_sequences)
 
-    @abc.abstractmethod
+    def _get_model_config(self):
+        return transformers.AutoModel.from_pretrained(self._model_path).config
+
     def get_max_length(self):
-        pass
+        return self._get_model_config().max_position_embeddings
 
     @abc.abstractmethod
     def _get_bare_model(self, model):
