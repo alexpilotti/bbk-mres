@@ -167,9 +167,13 @@ class BaseModelLoader(metaclass=abc.ABCMeta):
             param.requires_grad = False
 
         if not layers:
+            layers = [-_DEFAULT_NUM_FROZEN_LAYERS]
+
+        if len(layers) == 1 and layers[0] < 0:
+            num_frozen_layers = -layers[0]
             num_layers = len(bare_model.encoder.layer)
-            # Pick all layers minus the last _DEFAULT_NUM_FROZEN_LAYERS
-            layers = range(0, num_layers - _DEFAULT_NUM_FROZEN_LAYERS)
+            # Pick all layers minus the last num_frozen_layers
+            layers = range(0, num_layers - num_frozen_layers)
 
         for layer in [bare_model.encoder.layer[i] for i in layers]:
             for param in layer.parameters():
