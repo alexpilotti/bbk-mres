@@ -178,12 +178,15 @@ plot_metrics <- function(data, model_name, is_ft, metrics_group) {
     ) +
     theme_minimal() +
     theme(
-      legend.position = "none",
+      legend.position = "right",
       plot.title = element_text(hjust = 0.5),
       panel.grid = element_blank(),
       axis.text.x = element_text(color = "black"),
       axis.text.y = element_text(color = "black")
-    )
+    ) +
+    guides(fill = guide_colorbar(title.position = "top",
+                                 barwidth = unit(0.5, "lines"),
+                                 barheight = unit(5, "lines")))
   p
 }
 
