@@ -157,7 +157,7 @@ plot_data <- function(metrics, metric_name) {
   )) +
   theme_minimal() +
   theme(
-    legend.position = "none",
+    legend.position = "right",
     plot.title = element_text(
       hjust = 0.5,
       face = "bold",
@@ -176,7 +176,10 @@ plot_data <- function(metrics, metric_name) {
     x = NULL,
     y = NULL,
     fill = NULL
-  )
+  ) +
+  guides(fill = guide_colorbar(title.position = "top",
+                               barwidth = unit(0.5, "lines"),
+                               barheight = unit(5, "lines")))
   p
 }
 ```
