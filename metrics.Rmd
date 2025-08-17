@@ -157,7 +157,7 @@ plot_data <- function(metrics, metric_name) {
   )) +
   theme_minimal() +
   theme(
-    legend.position = "right",
+    legend.position = "left",
     plot.title = element_text(
       hjust = 0.5,
       face = "bold",
