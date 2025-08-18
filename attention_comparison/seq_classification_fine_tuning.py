@@ -105,6 +105,8 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
         model_name, model_path, use_default_model_tokenizer)
     model, tokenizer = model_loader.load_model_for_sequence_classification()
 
+    model.config.use_cache = False
+
     model_loader.freeze_weights(model, frozen_layers)
 
     model_size = sum(p.numel() for p in model.parameters())
