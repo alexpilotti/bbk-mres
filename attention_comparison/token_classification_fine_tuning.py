@@ -206,6 +206,7 @@ def train(data, chain, region, model_name, model_path,
         metric_for_best_model="auc",
         lr_scheduler_type='linear',
         seed=common.DEFAULT_SEED,
+        data_seed=common.DEFAULT_SEED,
         fp16=True,
         auto_find_batch_size=True,
         ddp_find_unused_parameters=False
