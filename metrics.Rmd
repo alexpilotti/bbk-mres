@@ -36,6 +36,18 @@ if(!require("dplyr")){
   install.packages("dplyr")
 }
 library(dplyr)
+
+if(!require("patchwork")){
+  install.packages("patchwork")
+}
+library(patchwork)
+
+knitr::opts_chunk$set(
+  fig.width = 8,
+  fig.height = 5.2,
+  dpi = 300,
+  fig.align = "center"
+)
 ```
 
 ```{r functions, cache = FALSE}
@@ -46,6 +58,8 @@ PT <- "PT"
 FT <- "FT"
 PT_SVM <- "PT_SVM"
 PT_SVM_shuffled <- "PT_SVM_shuffled"
+
+PLM_NUM_PARAMS_BASE <- 1000^4
 
 load_json_files <- function(training, filtered = TRUE) {
   metrics <- data.frame()
@@ -65,7 +79,7 @@ load_json_files <- function(training, filtered = TRUE) {
 
     if (grepl("ESM", model_name)) {
       # Simple hack to group ESM models together
-      json_data$num_parameters <- json_data$num_parameters + 1000^4
+      json_data$num_parameters <- json_data$num_parameters + PLM_NUM_PARAMS_BASE
     }
 
     json_data <- data.frame(
@@ -128,6 +142,22 @@ if (params$include_averages) {
   metrics <- bind_rows(metrics, metrics_avg)
 }
 
+plot_bracket <- function(x1, x2, y_bar = 0.45, tip = 0.18,
+                         label = NULL, gap = 0.08, lw = 0.6, text_vjust = 0,
+                         text_size = 3) {
+  list(
+    annotate("segment", x = x1, xend = x2, y = y_bar, yend = y_bar,
+             linewidth = lw),
+    annotate("segment", x = x1, xend = x1, y = y_bar, yend = y_bar - tip,
+             linewidth = lw),
+    annotate("segment", x = x2, xend = x2, y = y_bar, yend = y_bar - tip,
+             linewidth = lw),
+    if (!is.null(label))
+      annotate("text", x = (x1 + x2)/2, y = y_bar + gap, label = label,
+               vjust = text_vjust, size = text_size)
+  )
+}
+
 plot_data <- function(metrics, metric_name) {
   data_range <- max(metrics[metric_name]) - min(metrics[metric_name])
   binwidth_value <- data_range / 30
@@ -180,6 +210,31 @@ plot_data <- function(metrics, metric_name) {
   guides(fill = guide_colorbar(title.position = "top",
                                barwidth = unit(0.5, "lines"),
                                barheight = unit(5, "lines")))
+
+  model_num_params <- metrics %>%
+                      filter(!is.na(num_parameters)) %>%
+                      distinct(model, num_parameters) %>%
+                      arrange(num_parameters)
+  last_ablm_idx <- model_num_params %>%
+                   summarise(
+                     idx = sum(num_parameters < PLM_NUM_PARAMS_BASE)) %>%
+                   pull(idx)
+  # Don't include the AVG column
+  last_plm_idx <- nrow(model_num_params) - 1
+
+  # TODO: fix brackets layout with a different number of models
+  if (!is.na(last_ablm_idx) && last_plm_idx == 11) {
+    p_brackets <- ggplot(metrics, aes(x = model, y = 0)) +
+      geom_blank() +
+      coord_cartesian(ylim = c(0, 1), clip = "off") +
+      theme_void() +
+      plot_bracket(1, last_ablm_idx,
+                   y_bar = -1.05, tip = 0.2, gap = 0.08, label = "AbLMs") +
+      plot_bracket(last_ablm_idx + 1, last_plm_idx,
+                   y_bar = -1.05, tip = 0.2, gap = 0.08, label = "PLMs")
+
+    p <- p_brackets / p + plot_layout(heights = unit(c(12, 1), c("mm", "null")))
+  }
   p
 }
 ```
