@@ -207,7 +207,8 @@ def train(data, chain, region, model_name, model_path,
         lr_scheduler_type='linear',
         seed=common.DEFAULT_SEED,
         fp16=True,
-        auto_find_batch_size=True
+        auto_find_batch_size=True,
+        ddp_find_unused_parameters=False
     )
 
     tokenized_dataset = _prepare_dataset(
