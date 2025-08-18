@@ -58,8 +58,6 @@ def set_seed(seed: int = DEFAULT_SEED):
     os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
     torch.use_deterministic_algorithms(seed is not None)
     transformers.set_seed(seed)
-    if seed:
-        transformers.enable_full_determinism(seed)
 
 
 def save_json_file(data, path, indent=4):
