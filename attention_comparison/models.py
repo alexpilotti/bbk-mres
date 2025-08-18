@@ -175,6 +175,8 @@ class BaseModelLoader(metaclass=abc.ABCMeta):
             # Pick all layers minus the last num_frozen_layers
             layers = range(0, num_layers - num_frozen_layers)
 
+        LOG.info(f"Freezing layers {list(layers)} out of "
+                 f"{len(bare_model.encoder.layer)}")
         for layer in [bare_model.encoder.layer[i] for i in layers]:
             for param in layer.parameters():
                 param.requires_grad = False
