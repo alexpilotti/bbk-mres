@@ -129,6 +129,8 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
         lr_scheduler_type='linear',
         seed=common.DEFAULT_SEED,
         data_seed=common.DEFAULT_SEED,
+        # Set to 0 for determinism concerns
+        dataloader_num_workers=0,
         fp16=True,
         auto_find_batch_size=True,
         ddp_find_unused_parameters=False
