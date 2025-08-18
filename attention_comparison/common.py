@@ -5,6 +5,7 @@ import random
 import numpy as np
 from sklearn import metrics
 import torch
+import transformers
 
 
 CHAIN_H = "H"
@@ -54,6 +55,11 @@ def set_seed(seed: int = DEFAULT_SEED):
     np.random.seed(seed)
     random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed if seed else 0)
+    os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+    torch.use_deterministic_algorithms(seed is not None)
+    transformers.set_seed(seed)
+    if seed:
+        transformers.enable_full_determinism(seed)
 
 
 def save_json_file(data, path, indent=4):
