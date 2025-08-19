@@ -496,7 +496,7 @@ def _setup_logging():
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 
-if __name__ == '__main__':
+def main():
     args = _parse_args()
     if not args:
         sys.exit(0)
@@ -527,3 +527,7 @@ if __name__ == '__main__':
         _process_svm_embeddings_prediction_command(args)
     elif args.command == CMD_UNDERSAMPLE:
         _process_undersample_command(args)
+
+
+if __name__ == '__main__':
+    main()
