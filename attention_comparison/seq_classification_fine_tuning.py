@@ -93,7 +93,7 @@ def _get_dataset_tokenized(data, chain, tokenizer, model_loader):
     return data.map(
         _preprocess,
         batched=True,
-        remove_columns=[common.CHAIN_H, common.CHAIN_L]
+        remove_columns=[common.CHAIN_H, common.CHAIN_L, "__index_level_0__"]
     )
 
 
