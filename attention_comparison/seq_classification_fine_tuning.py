@@ -162,6 +162,9 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
     out_file = os.path.join(output_model_path, "model_test_stats.json")
     common.save_json_file(out, out_file)
 
+    for path, hash in common.compute_files_hash(output_model_path):
+        LOG.info(f"File: \"{path}\", SHA-256: {hash}")
+
 
 def predict(data, chain, model_name, model_path, use_default_model_tokenizer):
     common.set_seed()

@@ -1,5 +1,7 @@
+import hashlib
 import json
 import os
+import pathlib
 import random
 
 import numpy as np
@@ -81,3 +83,22 @@ def format_label_counts(data):
     counts = data[LABEL_COL_NAME].value_counts(normalize=True) * 100
     counts = counts.apply(lambda x: '{:,.2f} %'.format(x))
     return counts.to_string(header=False)
+
+
+def _sha256_file(file_path, chunk_size=(1 << 20)):
+    h = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(chunk_size), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _list_files(dir_path):
+    for p in pathlib.Path(dir_path).rglob("*"):
+        if p.is_file():
+            yield p
+
+
+def compute_files_hash(dir_path):
+    for file_path in sorted(_list_files(dir_path)):
+        yield (file_path.parts[-1], _sha256_file(file_path))

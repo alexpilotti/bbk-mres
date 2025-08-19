@@ -234,6 +234,9 @@ def train(data, chain, region, model_name, model_path,
     if save_strategy == transformers.IntervalStrategy.NO:
         trainer.save_model()
 
+    for path, hash in common.compute_files_hash(output_model_path):
+        LOG.info(f"File: \"{path}\", SHA-256: {hash}")
+
 
 def predict_metrics(data, chain, region, model_name, model_path,
                     use_default_model_tokenizer):
