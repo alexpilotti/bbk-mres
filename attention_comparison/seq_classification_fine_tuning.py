@@ -129,6 +129,7 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
         load_best_model_at_end=True,
         metric_for_best_model="auc",
         lr_scheduler_type='linear',
+        full_determinism=True,
         seed=common.DEFAULT_SEED,
         data_seed=common.DEFAULT_SEED,
         # Set to 0 for determinism concerns
