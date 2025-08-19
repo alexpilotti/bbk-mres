@@ -118,6 +118,7 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
     LOG.info(f"Saving model to {output_model_path}")
     training_args = transformers.TrainingArguments(
         output_model_path,
+        optim="adamw_torch_fused",
         evaluation_strategy=save_strategy,
         save_strategy=save_strategy,
         logging_strategy='epoch',
