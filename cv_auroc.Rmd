@@ -23,6 +23,10 @@ if(!require("stringr")) {
   install.packages("stringr")
 }
 library(stringr)
+
+knitr::opts_chunk$set(
+  dpi = 300
+)
 ```
 
 ```{r plot_cv_auroc, cache = FALSE}

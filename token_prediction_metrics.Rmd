@@ -38,6 +38,10 @@ if(!require("glue")) {
   install.packages("glue")
 }
 library(glue)
+
+knitr::opts_chunk$set(
+  dpi = 300
+)
 ```
 
 ```{r plot_metrics, cache = FALSE}

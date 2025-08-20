@@ -45,6 +45,10 @@ if(!require("rlist")) {
   install.packages("rlist")
 }
 library(rlist)
+
+knitr::opts_chunk$set(
+  dpi = 300
+)
 ```
 
 ```{r functions, cache = FALSE}

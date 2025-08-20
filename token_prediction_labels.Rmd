@@ -52,7 +52,11 @@ if(!require("stringr")) {
 }
 library(stringr)
 
-knitr::opts_chunk$set(fig.width=14, fig.height=16)
+knitr::opts_chunk$set(
+  fig.width = 14,
+  fig.height = 16,
+  dpi = 300
+)
 ```
 
 ```{r plot_token_prediction, cache = FALSE}
