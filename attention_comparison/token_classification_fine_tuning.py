@@ -247,8 +247,10 @@ def predict_metrics(data, chain, region, model_name, model_path,
         model_name, model_path, use_default_model_tokenizer)
     model, tokenizer = model_loader.load_model_for_token_classification()
 
+    training_args = common.get_predict_training_args()
     trainer = transformers.Trainer(
         model,
+        args=training_args,
         tokenizer=tokenizer
     )
 

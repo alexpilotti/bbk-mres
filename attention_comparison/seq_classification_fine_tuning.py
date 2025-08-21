@@ -177,8 +177,10 @@ def predict(data, chain, model_name, model_path, use_default_model_tokenizer):
     ab_dataset_tokenized = _get_dataset_tokenized(
         data, chain, tokenizer, model_loader)
 
+    training_args = common.get_predict_training_args()
     trainer = transformers.Trainer(
         model,
+        args=training_args,
         tokenizer=tokenizer
     )
 

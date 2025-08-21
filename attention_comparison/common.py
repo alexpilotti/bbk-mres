@@ -102,3 +102,16 @@ def _list_files(dir_path):
 def compute_files_hash(dir_path):
     for file_path in sorted(_list_files(dir_path)):
         yield (file_path.parts[-1], _sha256_file(file_path))
+
+
+def get_predict_training_args():
+    return transformers.TrainingArguments(
+        # output_dir not needed by predict, but it has to be a valid path
+        output_dir=os.getenv("TMPDIR", "/tmp"),
+        seed=DEFAULT_SEED,
+        data_seed=DEFAULT_SEED,
+        # Set to 0 for determinism concerns
+        dataloader_num_workers=0,
+        # Needed due to a configuration mismatch error when using DeepSpeed
+        fp16=True
+    )
