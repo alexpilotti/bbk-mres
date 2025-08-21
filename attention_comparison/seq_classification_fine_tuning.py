@@ -116,29 +116,8 @@ def train(data, chain, model_name, model_path, use_default_model_tokenizer,
         data, chain, tokenizer, model_loader)
 
     LOG.info(f"Saving model to {output_model_path}")
-    training_args = transformers.TrainingArguments(
-        output_model_path,
-        optim="adamw_torch_fused",
-        evaluation_strategy=save_strategy,
-        save_strategy=save_strategy,
-        logging_strategy='epoch',
-        learning_rate=LR,
-        per_device_train_batch_size=batch_size,
-        per_device_eval_batch_size=batch_size,
-        num_train_epochs=epochs,
-        warmup_ratio=0,
-        load_best_model_at_end=True,
-        metric_for_best_model="auc",
-        lr_scheduler_type='linear',
-        seed=common.DEFAULT_SEED,
-        data_seed=common.DEFAULT_SEED,
-        # Set to 0 for determinism concerns
-        dataloader_num_workers=0,
-        fp16=True,
-        auto_find_batch_size=True,
-        ddp_find_unused_parameters=False
-    )
-
+    training_args = common.get_training_args(
+        output_model_path, save_strategy, batch_size, epochs, LR)
     trainer = transformers.Trainer(
         model,
         args=training_args,

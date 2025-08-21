@@ -104,6 +104,32 @@ def compute_files_hash(dir_path):
         yield (file_path.parts[-1], _sha256_file(file_path))
 
 
+def get_training_args(output_model_path, save_strategy, batch_size, epochs,
+                      learning_rate):
+    return transformers.TrainingArguments(
+        output_model_path,
+        optim="adamw_torch_fused",
+        evaluation_strategy=save_strategy,
+        save_strategy=save_strategy,
+        logging_strategy='epoch',
+        learning_rate=learning_rate,
+        per_device_train_batch_size=batch_size,
+        per_device_eval_batch_size=batch_size,
+        num_train_epochs=epochs,
+        warmup_ratio=0,
+        load_best_model_at_end=True,
+        metric_for_best_model="auc",
+        lr_scheduler_type='linear',
+        seed=DEFAULT_SEED,
+        data_seed=DEFAULT_SEED,
+        # Set to 0 for determinism concerns
+        dataloader_num_workers=0,
+        fp16=True,
+        auto_find_batch_size=True,
+        ddp_find_unused_parameters=False
+    )
+
+
 def get_predict_training_args():
     return transformers.TrainingArguments(
         # output_dir not needed by predict, but it has to be a valid path
