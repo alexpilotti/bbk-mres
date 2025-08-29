@@ -6,6 +6,7 @@ output:
 params:
   chain: "H"
   models: ""
+  bar_chart_region: "FULL"
   data_path: !r file.path(getwd(), "data")
 ---
 ```{r setup, warning = FALSE, message = FALSE, cache = FALSE}
@@ -137,6 +138,7 @@ load_data <- function(model_name, is_ft) {
                                   c("FR1", "FR2", "FR3", "FR4"),
                                   "FRm")
   }
+
   metrics_all
 }
 
@@ -234,10 +236,56 @@ plot_support <- function(data, model_name, is_ft) {
     )
   p
 }
+
+plot_metrics_bar_chart <- function(data, metric, group) {
+  chain <- params$chain
+  region <- params$bar_chart_region
+  paragraph_model_name <- "Paragraph"
+
+  # New vars needed to avoid naming collisions in filter(...)
+  var_metric <- metric
+  var_region <- region
+  var_group <- group
+
+  df <- data %>%
+    filter(metric == var_metric,
+           region == var_region,
+           group == var_group,
+           (ft == TRUE | model == paragraph_model_name)) %>%
+    mutate(
+      model = reorder(model, value),
+      ft_label = ifelse(model == paragraph_model_name, paragraph_model_name,
+                        ifelse(ft, "FT", "PT"))
+    )
+
+  ggplot( df, aes(x = model, y = value, fill = ft_label)) +
+    geom_col(position = position_dodge(width = 0.60), width = 0.80) +
+    labs(
+      title = glue(
+        "{str_to_title(metric)} - {chain} - {str_to_title(group)} - {region}"),
+      x = "Model",
+      y = str_to_title(metric),
+      fill = "Model Type"
+    ) +
+    scale_fill_manual(
+      values = c(
+        "PT" = "#aec7e8",
+        "FT" = "#1f77b4",
+        "Paragraph" = "#ff7f0e"),
+      labels = c(
+        "PT" = "Pre-trained AbLM/PLM",
+        "FT" = "Fine-tuned AbLM/PLM",
+        paragraph_model_name = paragraph_model_name)
+    ) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          plot.title  = element_text(hjust = 0.5))
+}
 ```
 
 ```{r plot_models, cache = FALSE}
 models <- str_split(params$models, ",")[[1]]
+all_data <- data.frame()
 
 for (model in models) {
   print(model)
@@ -251,6 +299,17 @@ for (model in models) {
     }
     p <- plot_support(data, model, ft)
     print(p)
+
+    data$ft <- ft
+    data$model <- model
+    all_data <- rbind(all_data, data)
+  }
+
+  for (group in c("0", "1", "weighted avg", "macro avg")) {
+    for (metric in c("f1", "precision", "recall")) {
+      p <- plot_metrics_bar_chart(all_data, metric, group)
+      print(p)
+    }
   }
 }
 ```
