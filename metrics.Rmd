@@ -6,7 +6,7 @@ output:
 params:
   chain: "H"
   models: ""
-  include_svm: False
+  include_svm: True
   include_unfiltered: True
   include_averages: True
   data_path: !r file.path(getwd(), "data")
