@@ -36,7 +36,7 @@ def _compute_metrics(p):
         "precision": metrics.precision_score(labs, preds, pos_label=1),
         "recall": metrics.recall_score(labs, preds, pos_label=1),
         "f1": metrics.f1_score(labs, preds, pos_label=1, average="weighted"),
-        "apr": metrics.average_precision_score(labs, probs, pos_label=1),
+        "ap": metrics.average_precision_score(labs, probs, pos_label=1),
         "balanced_accuracy": metrics.balanced_accuracy_score(labs, preds),
         "auc": metrics.roc_auc_score(labs, probs),
         "mcc": metrics.matthews_corrcoef(labs, preds),

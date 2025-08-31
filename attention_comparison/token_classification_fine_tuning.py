@@ -56,7 +56,7 @@ def _compute_metrics(p):
     else:
         auc = 0
 
-    report["apr"] = metrics.average_precision_score(
+    report["ap"] = metrics.average_precision_score(
         labs_filtered, probs_filtered, pos_label=1)
     report["balanced_accuracy"] = metrics.balanced_accuracy_score(
         labs_filtered, preds_filtered)
