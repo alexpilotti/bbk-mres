@@ -161,7 +161,12 @@ plot_bracket <- function(x1, x2, y_bar = 0.45, tip = 0.18,
 plot_data <- function(metrics, metric_name) {
   data_range <- max(metrics[metric_name]) - min(metrics[metric_name])
   binwidth_value <- data_range / 30
-  y_label = tools::toTitleCase(gsub("_", " ", metric_name))
+
+  if (nchar(metric_name) < 6) {
+    y_label <- toupper(metric_name)
+  } else {
+    y_label <- tools::toTitleCase(gsub("_", " ", metric_name))
+  }
 
   rows_order <- c("FT", "FT_NF", "PT_SVM", "PT_SVM_NF", "PT_SVM_shuffled",
                   "PT_SVM_shuffled_NF", "PT", "PT_NF")
