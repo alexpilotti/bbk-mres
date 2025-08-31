@@ -52,6 +52,11 @@ if(!require("stringr")) {
 }
 library(stringr)
 
+if(!require("patchwork")){
+  install.packages("patchwork")
+}
+library(patchwork)
+
 knitr::opts_chunk$set(
   fig.width = 14,
   fig.height = 16,
@@ -60,6 +65,34 @@ knitr::opts_chunk$set(
 ```
 
 ```{r plot_token_prediction, cache = FALSE}
+# IMGT region locations taken from:
+# https://www.imgt.org/IMGTScientificChart/Nomenclature/IMGT-FRCDRdefinition.html
+REGIONS <- list(
+  FR1  = c(1, 26),
+  CDR1 = c(27, 38),
+  FR2  = c(39, 55),
+  CDR2 = c(56, 65),
+  FR3  = c(66, 104),
+  CDR3 = c(105, 117),
+  FR4  = c(118, 129)
+)
+
+plot_bracket <- function(x1, x2, y_bar = 0.45, tip = 0.18,
+                         label = NULL, gap = 0.08, lw = 0.6, text_vjust = 0,
+                         text_size = 4) {
+  list(
+    annotate("segment", x = x1, xend = x2, y = y_bar, yend = y_bar,
+             linewidth = lw),
+    annotate("segment", x = x1, xend = x1, y = y_bar, yend = y_bar - tip,
+             linewidth = lw),
+    annotate("segment", x = x2, xend = x2, y = y_bar, yend = y_bar - tip,
+             linewidth = lw),
+    if (!is.null(label))
+      annotate("text", x = (x1 + x2)/2, y = y_bar + gap, label = label,
+               vjust = text_vjust, size = text_size)
+  )
+}
+
 plot_token_prediction <- function(model_name, is_ft) {
   chain <- params$chain
   fine_tuning_region <- params$fine_tuning_region
@@ -149,8 +182,7 @@ plot_token_prediction <- function(model_name, is_ft) {
         "3" = "False negative"
     )) +
     labs(
-      title = glue("Predicted labels - {model_name} - {fine_tuning_region} - ",
-                   "{predict_region} - {ft_pt}"),
+      title = NULL,
       x = glue("Chain: {chain} - {predict_region}"),
       y = "Sequences",
       fill = "Color"
@@ -168,11 +200,37 @@ plot_token_prediction <- function(model_name, is_ft) {
         size = 5
       )
     )
+
+  p_brackets <- ggplot(aggregated_df, aes(x = positions, y = 0)) +
+    geom_blank() +
+    coord_cartesian(ylim = c(0, 1), clip = "off") +
+    theme_void()
+
+  x_levels <- levels(factor(aggregated_df$positions))
+  for (region in names(REGIONS)) {
+    start <- which(x_levels == toString(REGIONS[[region]][1]))
+    if(length(start) == 0) next
+
+    end <- which(x_levels == toString(REGIONS[[region]][2]))
+    if(length(end) == 0) {
+      end <- length(x_levels)
+    }
+
+    p_brackets <- p_brackets + plot_bracket(
+      start, end, y_bar = 0.2, tip = 0.2, label = region, gap = 0.1)
+  }
+
+  p <- p_brackets / p + plot_layout(heights = unit(c(12, 1), c("mm", "null"))) +
+   plot_annotation(title = glue(
+     "Predicted labels - {model_name} - {fine_tuning_region} - ",
+     "{predict_region} - {ft_pt}")) &
+    theme(plot.title = element_text(hjust = 0.5, size = 16, face = "bold"))
+
   print(p)
 }
 ```
 
-```{r plot_models, cache = FALSE, fig.height = 4}
+```{r plot_models, cache = FALSE, fig.height = 4.7}
 models <- str_split(params$models, ",")[[1]]
 
 for (model in models) {
