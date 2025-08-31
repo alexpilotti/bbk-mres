@@ -88,7 +88,7 @@ load_json_files <- function(training, filtered = TRUE) {
       specificity = json_data$specificity,
       f1 = json_data$f1,
       fpr = json_data$fpr,
-      apr = json_data$apr,
+      ap = json_data$ap,
       balanced_accuracy = json_data$balanced_accuracy,
       auc = json_data$auc,
       mcc = json_data$mcc,
@@ -259,8 +259,8 @@ plot_data(metrics, "fpr")
 plot_data(metrics, "f1")
 ```
 
-```{r apr, cache = FALSE}
-plot_data(metrics, "apr")
+```{r ap, cache = FALSE}
+plot_data(metrics, "ap")
 ```
 
 ```{r balanced_accuracy, cache = FALSE}
