@@ -224,7 +224,7 @@ plot_token_prediction <- function(model_name, is_ft) {
    plot_annotation(title = glue(
      "Predicted labels - {model_name} - {fine_tuning_region} - ",
      "{predict_region} - {ft_pt}")) &
-    theme(plot.title = element_text(hjust = 0.5, size = 16, face = "bold"))
+    theme(plot.title = element_text(hjust = 0.5, size = 16))
 
   print(p)
 }
