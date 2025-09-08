@@ -15,7 +15,7 @@ import sequence_identity
 import shuffle
 import svm_embeddings_prediction
 import token_classification_fine_tuning as token_class_ft
-
+import vcab
 
 CMD_ATTENTIONS = "attentions"
 CMD_EMBEDDINGS = "embeddings"
@@ -29,6 +29,7 @@ CMD_SPLIT_DATA = "split-data"
 CMD_SVM_EMBEDDINGS_BUILD_MODEL = "svm-embeddings-build-model"
 CMD_SVM_EMBEDDINGS_PREDICTION = "svm-embeddings-predict"
 CMD_UNDERSAMPLE = "undersample"
+CMD_PROCESS_VCAB_DATA = "process-vcab-data"
 
 DEFAULT_MIN_SEQ_ID = 0.9
 
@@ -290,6 +291,26 @@ def _add_undersample_args(parser):
         help="Sequences data in Apache Parquet format path")
 
 
+def _add_process_vcab_data_args(parser):
+    parser.add_argument(
+        "-c", "--csv", required=True,
+        type=_valid_file_arg,
+        help="VCAb CSV data")
+    parser.add_argument(
+        "-p", "--pops-dir", required=True,
+        type=_valid_dir_arg,
+        help=("Directory with POPSComp results"))
+    parser.add_argument(
+        "--d-sasa-th", required=False,
+        type=float,
+        default=vcab.DEFAULT_D_SASA_TH,
+        help=("Delta SASA threshold"))
+    parser.add_argument(
+        "-o", "--output", required=True,
+        type=pathlib.Path,
+        help="Sequences data in Apache Parquet format path")
+
+
 def _parse_args():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(
@@ -362,6 +383,11 @@ def _parse_args():
         CMD_SHUFFLE, help="Shuffle",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     _add_shuffle_data_args(shuffle_parser)
+
+    vcab_parser = subparsers.add_parser(
+        CMD_PROCESS_VCAB_DATA, help="Process VCAb data",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    _add_process_vcab_data_args(vcab_parser)
 
     # If no arguments are provided, print help
     if len(sys.argv) == 1:
@@ -486,6 +512,11 @@ def _process_undersample_command(args):
     sequence_identity.save_data(output_data, args.output)
 
 
+def _process_vcab_data_command(args):
+    vcab.process_vcab_data(args.csv, args.pops_dir, args.output,
+                           args.d_sasa_th)
+
+
 def _process_shuffle_command(args):
     input_data = shuffle.load_data(args.input)
     output_data = shuffle.shuffle_column_values(input_data, args.column)
@@ -527,6 +558,8 @@ def main():
         _process_svm_embeddings_prediction_command(args)
     elif args.command == CMD_UNDERSAMPLE:
         _process_undersample_command(args)
+    elif args.command == CMD_PROCESS_VCAB_DATA:
+        _process_vcab_data_command(args)
 
 
 if __name__ == '__main__':
