@@ -2,6 +2,7 @@ import argparse
 import logging
 import pathlib
 import sys
+import warnings
 
 import attention_weights
 import common
@@ -524,6 +525,7 @@ def _process_shuffle_command(args):
 
 
 def _setup_logging():
+    warnings.simplefilter(action='ignore', category=FutureWarning)
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 
