@@ -140,6 +140,13 @@ def _add_numbering(vcab_db_path="vcab.db"):
         else:
             conn.execute(sqlalchemy.text(
                 "update mapping set anarci_ins = NULL"))
+
+        indexes = [idx["name"] for idx in insp.get_indexes("mapping")]
+        if "idx_mapping_num" not in indexes:
+            conn.execute(sqlalchemy.text(
+                "create index idx_mapping_num ON mapping "
+                "(iden_code, chain, text_numbering)"))
+
         conn.commit()
 
         update_cmd = sqlalchemy.text(
