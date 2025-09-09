@@ -11,6 +11,7 @@ import distribution
 import embeddings
 import models
 import numbering
+import paragraph
 import seq_classification_fine_tuning as seq_class_ft
 import sequence_identity
 import shuffle
@@ -31,6 +32,7 @@ CMD_SVM_EMBEDDINGS_BUILD_MODEL = "svm-embeddings-build-model"
 CMD_SVM_EMBEDDINGS_PREDICTION = "svm-embeddings-predict"
 CMD_UNDERSAMPLE = "undersample"
 CMD_PROCESS_VCAB_DATA = "process-vcab-data"
+CMD_PARAGRAPH_PREDICT = "paragraph-prediction"
 
 DEFAULT_MIN_SEQ_ID = 0.9
 
@@ -312,6 +314,30 @@ def _add_process_vcab_data_args(parser):
         help="Sequences data in Apache Parquet format path")
 
 
+def _add_paragraph_predict_args(parser):
+    parser.add_argument(
+        "-i", "--input", required=True,
+        type=_valid_file_arg,
+        help="Sequences data in Apache Parquet format path")
+    parser.add_argument(
+        "-c", "--chain", required=True,
+        choices=[common.CHAIN_H, common.CHAIN_L],
+        help="The antibody chain(s), can be H or L")
+    parser.add_argument(
+        "-p", "--pdb-dir", required=True,
+        type=_valid_dir_arg,
+        help="Path of the directory containing the downloaded PDB files")
+    parser.add_argument(
+        "-o", "--output-dir", required=True,
+        type=_valid_dir_arg,
+        help="Path of the directory containing the prediction metrics")
+    parser.add_argument(
+        "-d", "--dataset", required=False,
+        type=str,
+        default=common.TEST,
+        help="Dataset to use for the prediction")
+
+
 def _parse_args():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(
@@ -389,6 +415,11 @@ def _parse_args():
         CMD_PROCESS_VCAB_DATA, help="Process VCAb data",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     _add_process_vcab_data_args(vcab_parser)
+
+    paragraph_predict_parser = subparsers.add_parser(
+        CMD_PARAGRAPH_PREDICT, help="Paragraph classification prediction",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    _add_paragraph_predict_args(paragraph_predict_parser)
 
     # If no arguments are provided, print help
     if len(sys.argv) == 1:
@@ -518,6 +549,11 @@ def _process_vcab_data_command(args):
                            args.d_sasa_th)
 
 
+def _process_paragraph_predict_command(args):
+    paragraph.predict(args.input, args.chain, args.pdb_dir, args.output_dir,
+                      args.dataset)
+
+
 def _process_shuffle_command(args):
     input_data = shuffle.load_data(args.input)
     output_data = shuffle.shuffle_column_values(input_data, args.column)
@@ -562,6 +598,8 @@ def main():
         _process_undersample_command(args)
     elif args.command == CMD_PROCESS_VCAB_DATA:
         _process_vcab_data_command(args)
+    elif args.command == CMD_PARAGRAPH_PREDICT:
+        _process_paragraph_predict_command(args)
 
 
 if __name__ == '__main__':

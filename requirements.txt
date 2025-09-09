@@ -27,5 +27,7 @@ antiberty
 scikit-learn
 joblib
 deepspeed
+# Use Paragraph fork due to required changes not merged upstream
+Paragraph @ git+https://github.com/alexpilotti/Paragraph/
 # ANARCI fails to install via pip. Clone it and install via setup.py install
 # anarci @ git+https://github.com/oxpig/ANARCI
