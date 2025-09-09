@@ -10,6 +10,18 @@ import torch
 import transformers
 
 
+# IMGT numbering
+# https://www.imgt.org/IMGTScientificChart/Nomenclature/IMGT-FRCDRdefinition.html
+REGIONS = {
+    "FR1": [1, 26],
+    "CDR1": [27, 38],
+    "FR2": [39, 55],
+    "CDR2": [56, 65],
+    "FR3": [66, 104],
+    "CDR3": [105, 117],
+    "FR4": [118, 129]
+    }
+
 CHAIN_H = "H"
 CHAIN_L = "L"
 CHAIN_HL = "HL"

@@ -17,18 +17,6 @@ LOG = logging.getLogger(__name__)
 
 LR = 1e-5
 
-# IMGT numbering
-# https://www.imgt.org/IMGTScientificChart/Nomenclature/IMGT-FRCDRdefinition.html
-REGIONS = {
-    "FR1": [1, 26],
-    "CDR1": [27, 38],
-    "FR2": [39, 55],
-    "CDR2": [56, 65],
-    "FR3": [66, 104],
-    "CDR3": [105, 117],
-    "FR4": [118, 129]
-    }
-
 
 def _compute_metrics(p):
     predictions, labels = p
@@ -75,11 +63,12 @@ def _get_num_pos(pos):
 
 
 def _filter_region_data(data, region):
-    if region not in REGIONS:
-        raise Exception(f'Invalid region name: "{region}". '
-                        f'Valid options are: {", ".join(REGIONS.keys())}')
+    if region not in common.REGIONS:
+        raise Exception(
+            f'Invalid region name: "{region}". '
+            f'Valid options are: {", ".join(common.REGIONS.keys())}')
 
-    region_range = range(*REGIONS[region])
+    region_range = range(*common.REGIONS[region])
 
     LOG.info(f"Retrieving residues in region {region}, "
              f"between positions: {region_range[0]}-{region_range[-1]}")
