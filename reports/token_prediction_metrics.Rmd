@@ -304,12 +304,12 @@ for (model in models) {
     data$model <- model
     all_data <- rbind(all_data, data)
   }
+}
 
-  for (group in c("0", "1", "weighted avg", "macro avg")) {
-    for (metric in c("f1", "precision", "recall")) {
-      p <- plot_metrics_bar_chart(all_data, metric, group)
-      print(p)
-    }
+for (group in c("0", "1", "weighted avg", "macro avg")) {
+  for (metric in c("f1", "precision", "recall")) {
+    p <- plot_metrics_bar_chart(all_data, metric, group)
+    print(p)
   }
 }
 ```
