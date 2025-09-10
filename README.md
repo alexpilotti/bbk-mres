@@ -177,12 +177,66 @@ Shuffle the labales in a dataset randomly.
 python abflow/cli.py shuffle [-h] -i INPUT [-c COLUMN] -o OUTPUT
 ```
 
+### Paragraph prediction
+
+Paratope prediction with [Paragraph](https://github.com/oxpig/Paragraph).
+
+```console
+python abflow/cli.py paragraph-prediction [-h]
+    -i INPUT -c {H,L} -p PDB_DIR -o OUTPUT_DIR [-d DATASET]
+```
+
+### VCAb data processing
+
+Process [VCAb](https://github.com/Fraternalilab/VCAb) data to prepare the
+dataset used for paratope fine-tuning and prediction.
+
+```console
+python abflow/cli.py process-vcab-data [-h]
+    -c CSV -p POPS_DIR [--d-sasa-th D_SASA_TH] -o OUTPUT
+```
+
 ## Acknowledgements
 
-This project includes code snippets from the following work, with many thanks
+The paratope prediction dataset was generated with data obtained from the
+[VCAb](https://github.com/Fraternalilab/VCAb) database, kindly provided by
+Dr. Dongjun Guo [@Guo2024].
+
+[Paragraph](https://github.com/oxpig/Paragraph) is a structure-based
+paratope prediction model, included for comparison with the AbLM/PLM token
+classification methodology introduced in this work [@Chinery2022].
+
+This project includes code snippets from [@Wang2024], with many thanks
 to Dr. Mamie Wang.
 
-M. Wang, J. Patsenker, H. Li, Y. Kluger, and S. H. Kleinstein, 'Supervised
-finetuning of pre-trained antibody language models improves antigen specificity
-prediction', May 13, 2024.
-doi: [10.1101/2024.05.13.593807](https://www.biorxiv.org/content/10.1101/2024.05.13.593807v1)
+## References
+
+```bibtex
+@article{Guo2024,
+    author = {Guo, Dongjun and Ng, Joseph Chi-Fung and Dunn-Walters,
+              Deborah K and Fraternali, Franca},
+    title = {VCAb: a web-tool for structure-guided exploration of antibodies},
+    journal = {Bioinformatics Advances},
+    year = {2024},
+    doi = {10.1093/bioadv/vbae137}
+}
+
+@article{Chinery2022,
+    author={Lewis Chinery, Newton Wahome, Iain H. Moal, and Charlotte
+            M. Deane},
+    title={Paragraph - antibody paratope prediction using graph neural networks
+            with minimal feature vectors},
+    journal={Bioinformatics},
+    year={2023},
+    doi = {10.1093/bioinformatics/btac732}
+}
+
+@article {Wang2024,
+	author = {Wang, Meng and Patsenker, Jonathan and Li, Henry and Kluger,
+              Yuval and Kleinstein, Steven H.},
+	title = {Supervised fine-tuning of pre-trained antibody language models
+             improves antigen specificity prediction},
+	year = {2024},
+	doi = {10.1101/2024.05.13.593807}
+}
+```
