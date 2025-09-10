@@ -85,29 +85,32 @@ python abflow/cli.py seq-prediction [-h]
     -i INPUT -c {H,L,HL} [-d DEVICE] -o OUTPUT
 ```
 
-### Token classification (paratope prediction) fine-tuning
+### Paragraph prediction
+
+Paratope prediction with [Paragraph](https://github.com/oxpig/Paragraph).
 
 ```console
-python abflow/cli.py token-fine-tuning [-h]
-    -m {BALM-paired,BALM-unpaired,AntiBERTy,AntiBERTa2,ESM1b,ESM2-15B,ESM2-3B,
-        ESM2-650M,ESM2-150M,ESM2-35M,ESM2-8M}
-    [-p MODEL_PATH]
-    [--use-default-model-tokenizer] -i INPUT -c {H,L,HL}
-    [-d DEVICE] -o OUTPUT
-    [--frozen-layers FROZEN_LAYERS [FROZEN_LAYERS ...]]
-    [-b BATCH_SIZE] [-e EPOCHS]
-    [-s {no,steps,epoch}] [--region REGION]
+python abflow/cli.py paragraph-prediction [-h]
+    -i INPUT -c {H,L} -p PDB_DIR -o OUTPUT_DIR [-d DATASET]
 ```
 
-### Token classification (paratope prediction) prediction
+### Process VCAb data
+
+Process [VCAb](https://github.com/Fraternalilab/VCAb) data to prepare the
+dataset used for paratope fine-tuning and prediction.
 
 ```console
-python abflow/cli.py token-prediction [-h]
-    -m {BALM-paired,BALM-unpaired,AntiBERTy,AntiBERTa2,ESM1b,ESM2-15B,ESM2-3B,
-        ESM2-650M,ESM2-150M,ESM2-35M,ESM2-8M}
-    [-p MODEL_PATH] [--use-default-model-tokenizer]
-    -i INPUT -c {H,L,HL} [-d DEVICE] -o OUTPUT -P PREDICTION
-    [--region REGION]
+python abflow/cli.py process-vcab-data [-h]
+    -c CSV -p POPS_DIR [--d-sasa-th D_SASA_TH] -o OUTPUT
+```
+
+### Remove similar antibody seqeuences
+
+This uses MMSeqs2's clustering to remove similar sequences from a dataset.
+
+```console
+python abflow/cli.py remove-similar-sequences [-h]
+    -i INPUT [-t TARGET] -o OUTPUT -c {H,L,HL} -m MIN_SEQ_ID
 ```
 
 ### Retrieve model attention values
@@ -135,11 +138,12 @@ python abflow/cli.py embeddings [-h]
     [-s SEQUENCE_INDEXES [SEQUENCE_INDEXES ...]]
 ```
 
-### SVM (antigen-specificity) prediction
+### Shuffle labels
+
+Shuffle the labales in a dataset randomly.
 
 ```console
-python abflow/cli.py svm-embeddings-predict [-h]
-    -m MODEL_PATH -i INPUT -e EMBEDDINGS -o OUTPUT
+python abflow/cli.py shuffle [-h] -i INPUT [-c COLUMN] -o OUTPUT
 ```
 
 ### Split datasets
@@ -151,13 +155,36 @@ python abflow/cli.py split-data [-h]
     -i INPUT -o OUTPUT -l POSITIVE_LABELS [POSITIVE_LABELS ...] -f FOLD
 ```
 
-### Remove similar antibody seqeuences
-
-This uses MMSeqs2's clustering to remove similar sequences from a dataset.
+### SVM (antigen-specificity) prediction
 
 ```console
-python abflow/cli.py remove-similar-sequences [-h]
-    -i INPUT [-t TARGET] -o OUTPUT -c {H,L,HL} -m MIN_SEQ_ID
+python abflow/cli.py svm-embeddings-predict [-h]
+    -m MODEL_PATH -i INPUT -e EMBEDDINGS -o OUTPUT
+```
+
+### Token classification (paratope prediction) fine-tuning
+
+```console
+python abflow/cli.py token-fine-tuning [-h]
+    -m {BALM-paired,BALM-unpaired,AntiBERTy,AntiBERTa2,ESM1b,ESM2-15B,ESM2-3B,
+        ESM2-650M,ESM2-150M,ESM2-35M,ESM2-8M}
+    [-p MODEL_PATH]
+    [--use-default-model-tokenizer] -i INPUT -c {H,L,HL}
+    [-d DEVICE] -o OUTPUT
+    [--frozen-layers FROZEN_LAYERS [FROZEN_LAYERS ...]]
+    [-b BATCH_SIZE] [-e EPOCHS]
+    [-s {no,steps,epoch}] [--region REGION]
+```
+
+### Token classification (paratope prediction) prediction
+
+```console
+python abflow/cli.py token-prediction [-h]
+    -m {BALM-paired,BALM-unpaired,AntiBERTy,AntiBERTa2,ESM1b,ESM2-15B,ESM2-3B,
+        ESM2-650M,ESM2-150M,ESM2-35M,ESM2-8M}
+    [-p MODEL_PATH] [--use-default-model-tokenizer]
+    -i INPUT -c {H,L,HL} [-d DEVICE] -o OUTPUT -P PREDICTION
+    [--region REGION]
 ```
 
 ### Undersample dataset
@@ -167,33 +194,6 @@ This is used to match a separate's dataset class distribution
 ```console
 python abflow/cli.py undersample [-h]
     -i INPUT [-t TARGET] [--target-dataset TARGET_DATASET] -o OUTPUT
-```
-
-### Shuffle labels
-
-Shuffle the labales in a dataset randomly.
-
-```console
-python abflow/cli.py shuffle [-h] -i INPUT [-c COLUMN] -o OUTPUT
-```
-
-### Paragraph prediction
-
-Paratope prediction with [Paragraph](https://github.com/oxpig/Paragraph).
-
-```console
-python abflow/cli.py paragraph-prediction [-h]
-    -i INPUT -c {H,L} -p PDB_DIR -o OUTPUT_DIR [-d DATASET]
-```
-
-### VCAb data processing
-
-Process [VCAb](https://github.com/Fraternalilab/VCAb) data to prepare the
-dataset used for paratope fine-tuning and prediction.
-
-```console
-python abflow/cli.py process-vcab-data [-h]
-    -c CSV -p POPS_DIR [--d-sasa-th D_SASA_TH] -o OUTPUT
 ```
 
 ## Acknowledgements
